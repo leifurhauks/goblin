@@ -197,3 +197,23 @@ $ git clone https://gist.github.com/e6d622c003c8e0d4dc0d.git
 $ cd e6d622c003c8e0d4dc0d/
 $ python goblin_example.py
 ```
+
+#Contributing
+Development of `goblin` happens at Github. We very much welcome your contribution
+of course. To do so, simply follow these guidelines:
+
+* Fork `goblin` on github
+* Create a topic branch ``git checkout -b my_topic_branch``
+* Push to your branch ``git push origin my_topic_branch``
+* Create a pull request against the `dev` branch.
+* Alternatively, if you need to report a bug or an unexpected behaviour, make sure
+  to include a [mcve](http://stackoverflow.com/help/mcve) in your issue.
+
+A good `pull` request should:
+
+* Cover one bug fix or new feature only
+* Include tests to cover the new code (inside the ``tests`` directory)
+* Test coverage should only increase
+* Preferably have one commit only (you can use [rebase](https://help.github.com/articles/about-git-rebase) to combine several
+  commits into one)
+* Make sure all tests pass
