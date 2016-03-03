@@ -1,7 +1,7 @@
 # Goblin OGM for TinkerPop3 Gremlin Server
 
-[![Build Status](https://travis-ci.org/ZEROFAIL/goblin.svg?branch=tinkerpop3)](https://travis-ci.org/ZEROFAIL/goblin)
-[![Coverage Status](https://coveralls.io/repos/github/ZEROFAIL/goblin/badge.svg?branch=tinkerpop3)](https://coveralls.io/github/ZEROFAIL/goblin?branch=master)
+[![Build Status](https://travis-ci.org/ZEROFAIL/goblin.svg?branch=master)](https://travis-ci.org/ZEROFAIL/goblin)
+[![Coverage Status](https://coveralls.io/repos/github/ZEROFAIL/goblin/badge.svg?branch=master)](https://coveralls.io/github/ZEROFAIL/goblin?branch=master)
 [![Gitter chat](https://badges.gitter.im/ZEROFAIL/goblin.svg)](https://gitter.im/ZEROFAIL/goblin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 ``Goblin`` began as the ZEROFAIL fork of ``mogwai``, a [TinkerPop3](https://tinkerpop.incubator.apache.org/) [Gremlin Server](http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#gremlin-server) compatible port of Cody Lee's original Python object graph mapper for Titan 0.5.x. ``Goblin`` uses @davebshow [gremlinclient](https://github.com/davebshow/gremlinclient) for asynchronous websocket based communication with the Gremlin Server, and is therefore designed to be multi-platform, allowing the user to choose between [Tornado](http://www.tornadoweb.org/en/stable/), [Trollius](http://trollius.readthedocs.org/), or [Asyncio](https://docs.python.org/3/library/asyncio.html). It aims to provide full support for all TinkerPop3 enabled graph databases; however, it is currently only tested against [Titan:db 1.x](http://s3.thinkaurelius.com/docs/titan/1.0.0/index.html). This fork is under active development.
