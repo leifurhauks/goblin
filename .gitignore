@@ -1,0 +1,47 @@
+*.py[co]
+
+# Packages
+*.egg
+*.egg-info
+dist
+build
+eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+# Installer logs
+pip-log.txt
+
+# Docs
+html/
+docs/_build
+docs/_static
+docs/_templates
+
+# IDE
+.project
+.pydevproject
+.settings/
+.idea/
+*.iml
+
+# Unit test / coverage reports
+coverage/
+.coverage
+.tox
+
+#Translations
+*.mo
+
+.DS_Store
+.noseids
+
+# virtualenv
+venv*/
+
+# ignore coverage directory
+coverage/
+coverage.xml
