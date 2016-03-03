@@ -34,7 +34,7 @@ setup(
     description='Object-Graph Mapper (OGM) for the TinkerPop 3 Gremlin Server',
     long_description=long_desc,
     classifiers=[
-        "Development Status :: 1 - Alpha",
+        "Development Status :: 3 - Alpha",
         "Environment :: Web Environment",
         "Environment :: Other Environment",
         "Environment :: Plugins",
@@ -70,7 +70,7 @@ setup(
     author_email='codylee@wellaware.us',
     maintainer='David Brown',
     maintainer_email='davebshow@gmail.com',
-    # url='https://bitbucket.org/wellaware/mogwai',
+    url='https://github.com/ZEROFAIL/goblin',
     license='Apache Software License 2.0',
     packages=find_packages(),
     include_package_data=True,
