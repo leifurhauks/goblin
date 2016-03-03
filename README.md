@@ -6,7 +6,7 @@
 
 This project began as the ZEROFAIL fork of ``mogwai``, a [TinkerPop3](https://tinkerpop.incubator.apache.org/) [Gremlin Server](http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#gremlin-server) compatible port of Cody Lee's original Python object graph mapper for Titan 0.5.x. 
 
-As Gremlin approached The TinkerPop, ``mogwai`` felt left behind and the closer he got, the more his world dissolved. He realized that all that he realized was just a realization and that all realized realizations are just as real asd the need to evolve into something else - ``goblin`` was born...
+As Gremlin approached The TinkerPop, ``mogwai`` felt left behind and the closer he got, the more his world dissolved. He realized that all that he realized was just a realization and that all realized realizations are just as real as the need to evolve into something else - ``goblin`` was born...
 
 ``Goblin`` uses @davebshow [gremlinclient](https://github.com/davebshow/gremlinclient) for asynchronous websocket based communication with the Gremlin Server, and is therefore designed to be multi-platform, allowing the user to choose between [Tornado](http://www.tornadoweb.org/en/stable/), [Trollius](http://trollius.readthedocs.org/), or [Asyncio](https://docs.python.org/3/library/asyncio.html). It aims to provide full support for all TinkerPop3 enabled graph databases; however, it is currently only tested against [Titan:db 1.x](http://s3.thinkaurelius.com/docs/titan/1.0.0/index.html). This fork is under active development.
 
