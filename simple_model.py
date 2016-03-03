@@ -5,10 +5,10 @@ from pytz import utc
 
 from tornado.platform.asyncio import AsyncIOMainLoop
 
-from mogwai import properties
-from mogwai.connection import setup, close_global_pool
-from mogwai.models import Vertex, Edge, V
-from mogwai.relationships import Relationship
+from goblin import properties
+from goblin.connection import setup, close_global_pool
+from goblin.models import Vertex, Edge, V
+from goblin.relationships import Relationship
 
 
 class WorksFor(Edge):
