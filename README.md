@@ -4,7 +4,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/ZEROFAIL/goblin/badge.svg?branch=dev)](https://coveralls.io/github/ZEROFAIL/goblin?branch=dev)
 [![Gitter chat](https://badges.gitter.im/ZEROFAIL/goblin.svg)](https://gitter.im/ZEROFAIL/goblin?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
-This project began as the ZEROFAIL fork of ``mogwai``, a [TinkerPop3](https://tinkerpop.incubator.apache.org/) [Gremlin Server](http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#gremlin-server) compatible port of Cody Lee's original Python object graph mapper for Titan 0.5.x. 
+This project began as the ZEROFAIL fork of ``mogwai``, a [TinkerPop3](https://tinkerpop.incubator.apache.org/) [Gremlin Server](http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#gremlin-server) compatible port of Cody Lee's original Python object graph mapper for Titan 0.5.x.
 
 As Gremlin approached The TinkerPop, ``mogwai`` felt left behind and the closer he got, the more his world dissolved. He realized that all that he realized was just a realization and that all realized realizations are just as real as the need to evolve into something else - ``goblin`` was born...
 
@@ -33,7 +33,7 @@ Then, if you have virtualenvwrapper, you can do something like this:
 
 ```sh
 $ mkvirtualenv -p /usr/bin/python3.5 goblin
-$ pip install git+https://github.com/ZEROFAIL/goblin.git@dev
+$ pip install git+https://github.com/ZEROFAIL/goblin.git@dev#egg=goblin
 ```
 
 
