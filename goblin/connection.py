@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 import logging
 from re import compile
 
-from gremlinclient import Pool, GraphDatabase
-
 from goblin._compat import string_types, array_types
 from goblin.exceptions import GoblinConnectionError, GoblinQueryError
 from goblin.metrics.manager import MetricManager
@@ -65,7 +63,7 @@ def execute_query(query, params=None, handler=None, transaction=True,
 
 def close_global_pool():
     if _connection_pool:
-        _connection_pool.close()
+        return _connection_pool.close()
 
 
 _host_re = compile(r'^((?P<user>.+?)(:(?P<password>.*?))?@)?(?P<host>.*?)(:(?P<port>\d+?))?(?P<graph_name>/.*?)?$')
@@ -85,11 +83,12 @@ def _parse_host(host, username, password, graph_name, graph_obj_name='g'):
                 'graph_name': graph_name, 'graph_obj_name': graph_obj_name}
 
 
-def setup(host, protocol="ws", graph_name='graph', graph_obj_name='g',
-          username='', password='', metric_reporters=None, pool_size=256,
-          concurrency='sync', future=None):
+def setup(host, pool_class=None, protocol="ws", graph_name='graph',
+          graph_obj_name='g', username='', password='',
+          metric_reporters=None, pool_size=256, concurrency='sync',
+          future=None):
     """  Sets up the connection, and instantiates the models
-
+         Maybe should add connection force_close
     """
     global _connection_pool
     global HOST_PARAMS
@@ -114,19 +113,23 @@ def setup(host, protocol="ws", graph_name='graph', graph_obj_name='g',
     url = "{0}://{1}:{2}".format(
         protocol, HOST_PARAMS["host"], HOST_PARAMS["port"])
 
-    if isinstance(host, string_types):
+    if pool_class is None:
+        try:
+            from gremlinclient.tornado import Pool
+        except ImportError:
+            try:
+                from gremlinclient.aiohttp import Pool
+            except ImportError:
+                raise RuntimeError(
+                    "Install appropriate client or pass pool explicitly")
+        pool_class = Pool
 
-        _connection_pool = Pool(url,
-                                maxsize=pool_size,
-                                username=username,
-                                password=password,
-                                force_release=True,
-                                future_class=future_class)
-
-    else:  # pragma: no cover
-        raise GoblinConnectionError(
-            "Must Specify at least one host or list of hosts: " +
-            "host: {}, graph_name: {}".format(host, graph_name))
+    _connection_pool = pool_class(url,
+                                  maxsize=pool_size,
+                                  username=username,
+                                  password=password,
+                                  force_release=True,
+                                  future_class=future_class)
 
 
 def _add_model_to_space(model):
