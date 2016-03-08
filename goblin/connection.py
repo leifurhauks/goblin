@@ -107,7 +107,6 @@ def setup(host, pool_class=None, protocol="ws", graph_name='graph',
     if metric_reporters:  # pragma: no cover
         metric_manager.setup_reporters(metric_reporters)
 
-    CONNECTION_POOL_TYPE = Pool
     HOST_PARAMS = _parse_host(
         host, username, password, graph_name, graph_obj_name)
     url = "{0}://{1}:{2}".format(
