@@ -77,6 +77,6 @@ setup(
     maintainer_email='davebshow@gmail.com',
     url='https://github.com/ZEROFAIL/goblin',
     license='Apache Software License 2.0',
-    packages=["goblin", "tests", "examples"],
+    packages=find_packages(),
     include_package_data=True,
 )
