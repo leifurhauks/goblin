@@ -217,3 +217,195 @@ A good `pull` request should:
 * Preferably have one commit only (you can use [rebase](https://help.github.com/articles/about-git-rebase) to combine several
   commits into one)
 * Make sure all tests pass
+
+# Integration with Python Asynchronous Frameworks
+
+`goblin` is designed to interact smoothly with a variety of async frameworks such as [aiohttp](http://aiohttp.readthedocs.org/en/stable/), [Tornado](http://www.tornadoweb.org/en/stable/), and [Pulsar](http://pythonhosted.org/pulsar/). The following examples demonstrate some simple integration with Pulsar using the `gremlinclinet.aiohttp` module.
+
+Install dependencies:
+
+```
+$ pip install aiohttp
+$ pip install pulsar
+$ pip install git+https://github.com/ZEROFAIL/goblin.git@dev#egg=goblin
+```
+
+Tornado is installed by default with `goblin`, but since we aren't using it here it can be uninstalled:
+
+```
+$ pip uninstall tornado
+```
+
+`Pulsar` uses an actor based model as its basic building blocks. The following example shows how to create a simple application that uses actors to create vertices:
+
+```python
+import asyncio
+import pulsar
+
+from goblin import properties
+from goblin.connection import setup, close_global_pool
+from goblin.models import Vertex
+from gremlinclient.aiohttp import Pool
+
+
+nodes = [
+    {"name": "dave", "email": "dave@dave.com", "url": "https://dave.com/"},
+    {"name": "jon", "email": "jon@jon.com", "url": "https://jon.com/"},
+    {"name": "leif", "email": "leif@leif.com", "url": "https://leif.com/"}]
+
+
+class Person(Vertex):
+    name = properties.String()
+    email = properties.Email()
+    url = properties.URL()
+
+
+@pulsar.command()
+@asyncio.coroutine
+def create_person(request, message):
+    name = message["name"]
+    url = message["url"]
+    email = message["email"]
+    person = yield from Person.create(name=name, url=url, email=email)
+    request.actor.logger.info("Created: {}".format(person))
+    return person
+
+
+class Creator:
+
+    def __init__(self):
+        # Allow passing of config args
+        setup('localhost', pool_class=Pool, future=asyncio.Future)
+        cfg = pulsar.Config()
+        cfg.parse_command_line()
+        # Arbiter controls the main event loop in master process
+        arbiter = pulsar.arbiter(cfg=cfg)
+        self.cfg = arbiter.cfg
+        # Conforms to the Pulsar definition of an async object
+        self._loop = arbiter._loop
+        self._loop.call_later(1, pulsar.ensure_future, self())
+        arbiter.start()
+
+    @asyncio.coroutine
+    def __call__(self, actor=None):
+        if actor is None:
+            # This creates an actor in its own process with its own loop
+            actor = yield from pulsar.spawn(name="creator")
+        if nodes:
+            node = nodes.pop()
+            self._loop.logger.info("Creating: {}".format(node["name"]))
+            # Send the task of creating a person to the actor
+            yield from pulsar.send(actor, 'create_person', node)
+            self._loop.call_soon(pulsar.ensure_future, self(actor))
+        else:
+            # Stop the event loop
+            yield from close_global_pool()
+            pulsar.arbiter().stop()
+```
+
+Run this example as follows:
+
+```
+$ git clone https://gist.github.com/322377bf995ddf768bdf.git
+$ cd 322377bf995ddf768bdf/
+$ python titan_pulsar.py
+```
+
+This is pretty low level, but `Pulsar` provides a higher level `Application` interface and ships with several batteries included apps out of the box. Here, we see how to create a JSON-RPC service with Titan:db...
+
+```python
+"""
+Basic JSON-RPC WSGI server with Pulsar. Could easily implement custom
+RPC and serve on sockets/websockets.
+"""
+import asyncio
+
+from pulsar import ensure_future
+from pulsar.apps import rpc, wsgi
+from pulsar.apps.wsgi.utils import LOGGER
+from pulsar.utils.httpurl import JSON_CONTENT_TYPES
+
+from goblin import properties
+from goblin.connection import setup, close_global_pool
+from goblin.models import Vertex
+from gremlinclient.aiohttp import Pool
+
+
+class Person(Vertex):
+    name = properties.String()
+    email = properties.Email()
+    url = properties.URL()
+
+
+class TitanRPC(rpc.JSONRPC):
+    """RPC methods are defined here"""
+    def rpc_create_person(self, request, name, email, url):
+        person = yield from Person.create(name=name, url=url, email=email)
+        LOGGER.info("Created: {}".format(person))
+        return [person.name, person.id]
+
+
+class TitanRPCSite(wsgi.LazyWsgi):
+    """Handler for the RPCServer"""
+
+    def __init__(self):
+        setup("localhost", pool_class=Pool, future=asyncio.Future)
+
+    def setup(self, environ):
+        commands = rpc.PulsarServerCommands()
+        json_handler = commands.putSubHandler('titan', TitanRPC())
+        middleware = wsgi.Router("/", post=json_handler,
+                                 accept_content_types=JSON_CONTENT_TYPES)
+        response = [wsgi.GZipMiddleware(200)]
+        return wsgi.WsgiHandler(middleware=[wsgi.wait_for_body_middleware,
+                                            middleware],
+                                response_middleware=response,
+                                async=True)
+
+
+class TitanRPCServer(wsgi.WSGIServer):
+    """Adds a hook that closes pool when the server is stopped."""
+    def monitor_stopping(self, monitor):
+        loop = monitor._loop
+        loop.call_soon(ensure_future, close_global_pool())
+
+
+def server(callable=None, **params):
+    return TitanRPCServer(TitanRPCSite(), **params)
+
+```
+
+Then to access the server, a simple client:
+
+```python
+"""
+Simple client for the JSONRPC Server
+"""
+
+import asyncio
+from pulsar.apps import rpc
+
+proxy = rpc.JsonProxy("http://localhost:8060")
+
+
+@asyncio.coroutine
+def main():
+    name, vid = yield from proxy.titan.create_person(
+        "jon", "jon@jon.com", "https://jon.com/")
+    print("Created vertex {} named {}".format(vid, name))
+```
+
+To run this example, first run the server:
+
+```
+$ git clone https://gist.github.com/ab8a034d31d8776f9c04.git
+$ cd ab8a034d31d8776f9c04/
+$ python titan_rpc_server.py
+```
+
+Then open a new terminal and navigate to the same directory:
+
+```
+$ cd ab8a034d31d8776f9c04/
+$ python titan_rpc_client.py
+```
