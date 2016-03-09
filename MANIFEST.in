@@ -1,5 +1,5 @@
 include AUTHORS
 include LICENSE
 include README.rst
-recursive-include mogwai *.py *.groovy VERSION
-recursive-exclude mogwai/tests
+recursive-include goblin *.py *.groovy VERSION
+recursive-exclude goblin/tests
