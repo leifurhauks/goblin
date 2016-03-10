@@ -116,8 +116,6 @@ class BaseGremlinMethod(object):
                 path = os.path.split(path)[0]
                 path += '/' + self.path
 
-            # TODO: make this less naive
-            gremlin_obj = None
             file_def = parse(path)
 
             # Functions
@@ -126,7 +124,7 @@ class BaseGremlinMethod(object):
                     gremlin_obj = grem_func
                     break
 
-            if gremlin_obj is None:
+            else:
                 raise GoblinGremlinException(
                     "The method '%s' wasn't found in %s" % (self.method_name,
                                                             path))
