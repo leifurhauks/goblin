@@ -7,8 +7,8 @@ from goblin import connection
 
 def get_existing_indices():
     """ Find all Vertex and Edge types available in the database """
-    vertex_indices = connection.execute_query('g.getIndexedKeys(Vertex.class)')
-    edge_indices = connection.execute_query('g.getIndexedKeys(Edge.class)')
+    vertex_indices = connection.execute_query('mgmt = graph.openManagement(); mgmt.getVertexLabels().collect{it.name()}')
+    edge_indices = connection.execute_query('mgmt = graph.openManagement(); mgmt.getRelationTypes(EdgeLabel).collect{it.name()}')
     return vertex_indices, edge_indices
 
 

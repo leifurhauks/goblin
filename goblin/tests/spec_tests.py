@@ -5,6 +5,10 @@ from nose.plugins.attrib import attr
 from nose.tools import nottest
 
 
+from tornado import gen
+from tornado.ioloop import IOLoop
+from tornado.testing import gen_test
+
 from .base import BaseGoblinTestCase
 from goblin import connection
 from goblin.models import Vertex, Edge
@@ -57,18 +61,22 @@ class TestSpecSystem(BaseGoblinTestCase):
                 self.assertDictContainsKeyWithValueType(
                     pv['compiled'], 'transaction', bool)
 
-    @nottest
+    @gen_test
     def test_gather_existing_indices(self):
-        """ Make sure existing indices can be gathered """
+        """ Make sure existing vertex and edge types can be gathered """
         v_idx, e_idx = get_existing_indices()
+        v_idx = (yield (yield v_idx).read()).data
+        e_idx = (yield (yield e_idx).read()).data
         self.assertEqual(len(v_idx), 0)
         self.assertEqual(len(e_idx), 0)
 
         # create vertex and edge index
-        connection.execute_query('g.makeKey(name).dataType(Object.class).indexed(Vertex.class).make(); g.commit()',
+        yield connection.execute_query('mgmt = graph.openManagement(); mgmt.makeVertexLabel(name).make(); mgmt.commit()',
                                  params={'name': 'testvertexindex'})
-        connection.execute_query('g.makeLabel(name).dataType(Object.class).indexed(Edge.class).make(); g.commit()',
+        yield connection.execute_query('mgmt = graph.openManagement(); mgmt.makeEdgeLabel(name).make(); mgmt.commit()',
                                  params={'name': 'testedgeindex'})
         v_idx, e_idx = get_existing_indices()
+        v_idx = (yield (yield v_idx).read()).data
+        e_idx = (yield (yield e_idx).read()).data
         self.assertEqual(len(v_idx), 1)
         self.assertEqual(len(e_idx), 1)
