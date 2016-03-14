@@ -67,8 +67,8 @@ class TestSpecSystem(BaseGoblinTestCase):
         v_idx, e_idx = get_existing_indices()
         v_idx = (yield (yield v_idx).read()).data
         e_idx = (yield (yield e_idx).read()).data
-        # self.assertEqual(len(v_idx), 0)
-        # self.assertEqual(len(e_idx), 0)
+        self.assertEqual(len(v_idx), 0)
+        self.assertEqual(len(e_idx), 0)
 
         # create vertex and edge index
         yield connection.execute_query('mgmt = graph.openManagement(); mgmt.makeVertexLabel(name).make(); mgmt.commit()',
@@ -78,7 +78,5 @@ class TestSpecSystem(BaseGoblinTestCase):
         v_idx, e_idx = get_existing_indices()
         v_idx = (yield (yield v_idx).read()).data
         e_idx = (yield (yield e_idx).read()).data
-        print(v_idx)
-        print(e_idx)
         self.assertEqual(len(v_idx), 1)
         self.assertEqual(len(e_idx), 1)
