@@ -16,6 +16,11 @@ from goblin.gremlin.table import Table, Row
 logger = logging.getLogger(__name__)
 
 
+def groovy_import(extra_import):
+    return GroovyImport([], [extra_import],
+                        ['import {};'.format(extra_import)])
+
+
 class BaseGremlinMethod(object):
     """ Maps a function in a groovy file to a method on a python class """
 
@@ -123,13 +128,13 @@ class BaseGremlinMethod(object):
                 if grem_func.name == self.method_name:
                     gremlin_obj = grem_func
                     break
-
             else:
                 raise GoblinGremlinException(
                     "The method '%s' wasn't found in %s" % (self.method_name,
                                                             path))
 
             for arg in gremlin_obj.args:
+                # DOES THIS REALLY NEED TO BE CHECKED
                 if arg in self.arg_list:
                     raise GoblinGremlinException(
                         "'%s' defined more than once in gremlin method arguments" % arg)
@@ -140,12 +145,8 @@ class BaseGremlinMethod(object):
 
             # imports
             self.imports = file_def.imports
-            extra_imports = []
-            for extra_import in self.extra_imports:
-                extra_imports.append(
-                    GroovyImport([], [extra_import],
-                                 ['import {};'.format(extra_import)]))
-            self.extra_imports = extra_imports
+            self.extra_imports = [groovy_import(extra_import) for
+                                  extra_import in self.extra_imports]
 
             self.is_setup = True
 

@@ -36,9 +36,9 @@ class Relationship(object):
                  gremlin_path=None, vertex_callback=None, edge_callback=None,
                  query_callback=None, create_callback=None):
         from goblin.models import Edge, Vertex
-        self.edge_classes = self.__create_class_tuple(
+        self.edge_classes = self._create_class_tuple(
             edge_class, enforce_type=Edge)
-        self.vertex_classes = self.__create_class_tuple(
+        self.vertex_classes = self._create_class_tuple(
             vertex_class, enforce_type=Vertex)
         assert direction in (IN, OUT, BOTH), \
             "Direction of Relationship must be of one in (%s, %s, %s)" % (
@@ -58,7 +58,7 @@ class Relationship(object):
         self.top_level_vertex = vertex
         self.top_level_vertex_class = vertex.__class__
 
-    def __create_class_tuple(self, model_class, enforce_type=None):
+    def _create_class_tuple(self, model_class, enforce_type=None):
         """
         Take in an string, array of classes, or a single class and make a
         tuple of said referenced classes
@@ -256,6 +256,9 @@ class Relationship(object):
         :type inV: goblin.models.Vertex
         :rtype: goblin.models.Vertex | goblin.models.Edge
         """
+        if isinstance(model_cls, LazyImportClass):
+            model_cls = model_cls.klass
+
         create_cls = model_cls._get_factory()
 
         from goblin.models.edge import Edge
@@ -297,6 +300,9 @@ class Relationship(object):
                     edge_type, self.direction, vertex_type))
 
         future = connection.future_class()
+        if isinstance(vertex_type, string_types):
+
+            top_level_module = self.top_level_vertex.__module__
         new_vertex_future = self._create_entity(vertex_type, vertex_params)
 
         def on_vertex(f):

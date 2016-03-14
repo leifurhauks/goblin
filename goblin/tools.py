@@ -157,7 +157,7 @@ class LazyImportClass(object):
             self.__name__ = import_name
         self.__module__ = self.__module__ .lstrip('.')
         self.import_name = import_name.lstrip('.')
-        #self.__setup_instantiated_vertex = getattr(self.klass, '__setup_instantiated_vertex')
+        #self._setup_instantiated_vertex = getattr(self.klass, '_setup_instantiated_vertex')
 
     @cached_property
     def klass(self):
@@ -167,8 +167,11 @@ class LazyImportClass(object):
     def __call__(self, *args, **kwargs):
         return self.klass(*args, **kwargs)
 
-    def __setup_instantiated_vertex(self, *args, **kwargs):  # pragma: no cover
-        return getattr(self.klass, '__setup_instantiated_vertex')(*args, **kwargs)
+    def _setup_instantiated_vertex(self, *args, **kwargs):  # pragma: no cover
+        return getattr(self.klass, '_setup_instantiated_vertex')(*args, **kwargs)
+
+    def get_label(self):
+        return self.klass.get_label()
 
 
 class Factory(base.Factory):
