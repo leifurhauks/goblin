@@ -245,7 +245,7 @@ import pulsar
 from goblin import properties
 from goblin.connection import setup, close_global_pool
 from goblin.models import Vertex
-from gremlinclient.aiohttp import Pool
+from gremlinclient.aiohttp_client import Pool
 
 
 nodes = [
@@ -328,7 +328,7 @@ from pulsar.utils.httpurl import JSON_CONTENT_TYPES
 from goblin import properties
 from goblin.connection import setup, close_global_pool
 from goblin.models import Vertex
-from gremlinclient.aiohttp import Pool
+from gremlinclient.aiohttp_client import Pool
 
 
 class Person(Vertex):

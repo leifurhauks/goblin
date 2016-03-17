@@ -114,10 +114,10 @@ def setup(host, pool_class=None, protocol="ws", graph_name='graph',
 
     if pool_class is None:
         try:
-            from gremlinclient.tornado import Pool
+            from gremlinclient.tornado_client import Pool
         except ImportError:
             try:
-                from gremlinclient.aiohttp import Pool
+                from gremlinclient.aiohttp_client import Pool
             except ImportError:
                 raise RuntimeError(
                     "Install appropriate client or pass pool explicitly")
