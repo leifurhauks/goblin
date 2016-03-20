@@ -62,11 +62,6 @@ setup(
                       'gremlinclient>=0.2.5',
                       'six>=1.10.0',
                       'factory-boy>=2.6.0'],
-    extras_require={
-        'develop': develop_requires,
-        'newrelic': ['newrelic>=2.60.0.46'],
-        'docs': ['Sphinx>=1.2.2', 'sphinx-rtd-theme>=0.1.6', 'watchdog>=0.8.3', 'newrelic>=2.60.0.46']
-    },
     test_suite='nose.collector',
     tests_require=develop_requires,
     author='Cody Lee',
