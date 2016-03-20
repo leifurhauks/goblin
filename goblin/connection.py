@@ -1,50 +1,69 @@
 from __future__ import unicode_literals
 import logging
-from re import compile
+try:
+    from urllib.parse import urlparse
+except ImportError:
+    from urlparse import urlparse
 
-from goblin._compat import string_types, array_types
-from goblin.exceptions import GoblinConnectionError, GoblinQueryError
-from goblin.metrics.manager import MetricManager
+from goblin.constants import (TORNADO_CLIENT_MODULE, AIOHTTP_CLIENT_MODULE,
+                              SECURE_SCHEMES, INSECURE_SCHEMES)
+from goblin.exceptions import GoblinConnectionError
 
 
 logger = logging.getLogger(__name__)
 
 
-HOST_PARAMS = None
+# Global vars
+Future = None
 _connection_pool = None
 _graph_name = None
-metric_manager = MetricManager()
+_traversal_source = None
 _loaded_models = []
-__cached_spec = None
+_scheme = None
+_netloc = None
+_client_module = None
 
 
-@metric_manager.time_calls
-def execute_query(query, params=None, handler=None, transaction=True,
-                  isolate=True, pool=None, *args, **kwargs):
+def execute_query(query, bindings=None, pool=None, graph_name=None,
+                  traversal_source=None, username="", password="",
+                  handler=None, *args, **kwargs):
     """
     Execute a raw Gremlin query with the given parameters passed in.
 
-    :param query: The Gremlin query to be executed
-    :type query: str
-    :param params: Parameters to the Gremlin query
-    :type params: dict
-    :param connection: The RexPro connection to execute the query with
-    :type connection: RexPro(Sync|Gevent|Eventlet)Connection or None
-    :param context: String context data to include with the query for stats
-        logging
-    :rtype: dict
+    :param str query: The Gremlin query to be executed
+    :param dict bindings: Bindings for the Gremlin query
+    :param `gremlinclient.pool.Pool` pool: Pool that provides connection used
+        in query
+    :param str graph_name: graph name as defined in server configuration.
+        Defaults to "graph"
+    :param str traversal_source: traversal source name as defined in the
+        server configuration. Defaults to "g"
+    :param str username: username as defined in the Tinkerpop credentials
+        graph.
+    :param str password: password for username as definined in the Tinkerpop
+        credentials graph
+    :param func handler: Handles preprocessing of query results
 
+    :returns: Future
     """
     if pool:
         connection_pool = pool
     else:
-        """ :type _connection_pool: RexProConnectionPool | None """
         connection_pool = _connection_pool
+
+    if graph_name is None:
+        graph_name = _graph_name
+
+    if traversal_source is None:
+        traversal_source = _traversal_source
+
+    aliases = {"graph": graph_name, "g": traversal_source}
 
     if not connection_pool:  # pragma: no cover
         raise GoblinConnectionError(
             'Must call goblin.connection.setup before querying.')
-    future = future_class()
+
+    future = Future()
     future_conn = connection_pool.acquire()
 
     def on_connect(f):
@@ -53,7 +72,8 @@ def execute_query(query, params=None, handler=None, transaction=True,
         except Exception as e:
             future.set_exception(e)
         else:
-            stream = conn.send(query, bindings=params, handler=handler)
+            stream = conn.send(
+                query, bindings=bindings, aliases=aliases, handler=handler)
             future.set_result(stream)
 
     future_conn.add_done_callback(on_connect)
@@ -61,57 +81,83 @@ def execute_query(query, params=None, handler=None, transaction=True,
     return future
 
 
-def close_global_pool():
+def tear_down():
+    """Close the global connection pool."""
     if _connection_pool:
         return _connection_pool.close()
 
 
-_host_re = compile(r'^((?P<user>.+?)(:(?P<password>.*?))?@)?(?P<host>.*?)(:(?P<port>\d+?))?(?P<graph_name>/.*?)?$')
-
-
-def _parse_host(host, username, password, graph_name, graph_obj_name='g'):
-        m = _host_re.match(host)
-        d = m.groupdict() if m is not None else {}
-        host = d.get('host', None) or '127.0.0.1'
-        port = int(d.get('port', None) or 8182)
-        username = d.get('user', None) or username
-        password = d.get('password', None) or password
-        graph_name = d.get('graph_name', None) or graph_name
-        graph_obj_name = graph_obj_name or 'g'
-        return {'host': host, 'port': port,
-                'username': username, 'password': password,
-                'graph_name': graph_name, 'graph_obj_name': graph_obj_name}
-
-
-def setup(host, pool_class=None, protocol="ws", graph_name='graph',
-          graph_obj_name='g', username='', password='',
-          metric_reporters=None, pool_size=256, concurrency='sync',
-          future=None):
-    """  Sets up the connection, and instantiates the models
-         Maybe should add connection force_close
+def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
+          username='', password='', pool_size=256, future_class=None,
+          ssl_context=None, loop=None):
     """
+    This function is responsible for instantiating the global variables that
+    provide :py:mod:`goblin` connection configuration params.
+
+    :param str url: url for the Gremlin Server. Expected format:
+        (ws|wss)://username:password@hostname:port/
+    :param gremlinclient.pool.Pool pool_class: Pool class used to create
+        global pool. If ``None`` trys to import
+        :py:class:`tornado_client.Pool<gremlinclient.tornado_client.client.Pool>`,
+        if this import fails, trys to import
+        :py:class:`aiohttp_client.Pool<gremlinclient.aiohttp_client.client.Pool>`
+    :param str graph_name: graph name as defined in server configuration.
+        Defaults to "graph"
+    :param str traversal_source: traversal source name as defined in the
+        server configuration. Defaults to "g"
+    :param str username: username as defined in the Tinkerpop credentials
+        graph.
+    :param str password: password for username as definined in the Tinkerpop
+        credentials graph
+    :param int pool_size: maximum number of connections allowed by global
+        connection pool_size
+    :param class future: type of Future. typically -
+        :py:class:`asyncio.Future`, :py:class:`trollius.Future`, or
+        :py:class:`tornado.concurrent.Future`
+    :param ssl.SSLContext ssl_context: :py:class:`ssl.SSLContext` for secure
+        protocol
+    :param loop: io loop.
+    """
+    global Future
     global _connection_pool
-    global HOST_PARAMS
-    global metric_manager
-    global future_class
+    global _graph_name
+    global _traversal_source
+    global _scheme
+    global _netloc
+    global _client_module
 
-    future_class = future
-    if not future_class:
-        try:
-            from tornado.concurrent import Future
-            future_class = Future
-        except ImportError:
-            # Should log warning here
-            pass
+    _graph_name = graph_name
+    _traversal_source = traversal_source
 
-    if metric_reporters:  # pragma: no cover
-        metric_manager.setup_reporters(metric_reporters)
+    parsed_url = urlparse(url)
+    _scheme = parsed_url.scheme
+    _netloc = parsed_url.netloc
 
-    HOST_PARAMS = _parse_host(
-        host, username, password, graph_name, graph_obj_name)
-    url = "{0}://{1}:{2}".format(
-        protocol, HOST_PARAMS["host"], HOST_PARAMS["port"])
+    pool_class = _get_pool_class(pool_class)
 
+    try:
+        _client_module = pool_class.__module__.split('.')[1]
+    except IndexError:
+        raise ValueError("Unknown client module.")
+
+    connector = _get_connector(ssl_context)
+
+    _connection_pool = pool_class(url,
+                                  maxsize=pool_size,
+                                  username=username,
+                                  password=password,
+                                  force_release=True,
+                                  future_class=future_class,
+                                  connector=connector)
+
+    if future_class is None:
+        future_class = _connection_pool.graph.future_class
+    Future = future_class
+
+    # Model/schema sync will run here as well as indexing
+
+
+def _get_pool_class(pool_class):
     if pool_class is None:
         try:
             from gremlinclient.tornado_client import Pool
@@ -119,16 +165,34 @@ def setup(host, pool_class=None, protocol="ws", graph_name='graph',
             try:
                 from gremlinclient.aiohttp_client import Pool
             except ImportError:
-                raise RuntimeError(
+                raise ImportError(
                     "Install appropriate client or pass pool explicitly")
         pool_class = Pool
+    return pool_class
 
-    _connection_pool = pool_class(url,
-                                  maxsize=pool_size,
-                                  username=username,
-                                  password=password,
-                                  force_release=True,
-                                  future_class=future_class)
+
+def _get_connector(ssl_context):
+    if _scheme in SECURE_SCHEMES:
+        if ssl_context is None:
+            raise ValueError("Please pass ssl_context for secure protocol")
+
+        if _client_module == AIOHTTP_CLIENT_MODULE:
+            import aiohttp
+            connector = aiohttp.TCPConnector(ssl_context=ssl_context,
+                                             loop=loop)
+        elif _client_module == TORNADO_CLIENT_MODULE:
+
+            from tornado import httpclient
+            from functools import partial
+            connector = partial(
+                httpclient.HTTPRequest, ssl_options=sslcontext)
+        else:
+            raise ValueError("Unknown client module")
+    elif _scheme in INSECURE_SCHEMES:
+        connector = None
+    else:
+        raise RuntimeError("Unknown protocol")
+    return connector
 
 
 def _add_model_to_space(model):
@@ -136,87 +200,11 @@ def _add_model_to_space(model):
     _loaded_models.append(model)
 
 
-def generate_spec():
-    """ Generates a titan index and type specification document based on loaded
-        Vertex and Edge models """
-    global _loaded_models, __cached_spec
-    if __cached_spec:
-        return __cached_spec
-    from goblin.models import Edge
-    spec_list = []
-    for model in _loaded_models:
-        if not model.__abstract__ and hasattr(model, 'get_label'):
-
-            # This will need to be updated
-            makeType = 'makeLabel' if issubclass(model, Edge) else 'makeKey'
-            element_type = 'Edge' if issubclass(model, Edge) else 'Vertex'
-
-            spec = {'model': model.get_label(),
-                    'element_type': element_type,
-                    'makeType': makeType,
-                    'properties': {}}
-            for property in model._properties.values():
-                if property.index:
-                    # Only set this up for indexed properties
-
-                    # Uniqueness constraint
-                    uniqueness = ""
-                    if property.unique and property.unique.lower() == 'in':
-                        uniqueness = ".unique()"
-                    elif property.unique and property.unique.lower() == 'out':
-                        uniqueness = ".unidirected()"
-                    elif property.unique and property.unique.lower() == 'both':
-                        uniqueness = ".unique().single()"
-                    if property.unique and property.unique.lower() == 'list':
-                        uniqueness += ".list()"
-
-                    # indexing extensions support
-                    if not property.index_ext:
-                        index_ext = ""
-                    else:
-                        index_ext = ".indexed(%s)" % property.index_ext
-
-                    compiled_index = {"script": "g.{}(name).dataType({}.class).indexed({}{}.class){}.make(); g.commit()".format(
-                        makeType,
-                        property.data_type,
-                        index_ext,
-                        element_type,
-                        uniqueness),
-                                      "params": {'name':
-                                                 property.db_field_name},
-                                      "transaction": False}
-                    spec['properties'][property.db_field_name] = {
-                        'data_type': property.data_type,
-                        'index_ext': index_ext,
-                        'uniqueness': uniqueness,
-                        'compiled': compiled_index,
-                    }
-
-            spec_list.append(spec)
-    __cached_spec = spec_list
-    return spec_list
+def generate_spec():  # pragma: no cover
+    pass
 
 
-def sync_spec(filename, host, graph_name='graph', graph_obj_name='g',
-              username='', password='', dry_run=False):  # pragma: no cover
-    """
-    Sync the given spec file to mogwai.
-
-    :param filename: The filename of the spec file
-    :type filename: str
-    :param host: The host the be synced
-    :type host: str
-    :param graph_name: The name of the graph to be synced
-    :type graph_name: str
-    :param dry_run: Only prints generated Gremlin if True
-    :type dry_run: boolean
-    :returns: None
-
-    """
-    # # conn = RexProConnection(
-    #     graph_name=graph_name,
-    #     **_parse_host(host, username, password, graph_name, graph_obj_name))
-    # Spec(filename).sync(conn, dry_run=dry_run)
+def sync_spec():  # pragma: no cover
     pass
 
 
@@ -225,9 +213,8 @@ def pop_execute_query_kwargs(keyword_arguments):
         return non-None query kwargs in a dict
     """
     query_kwargs = {}
-    for key in ('transaction', 'isolate', 'pool'):
+    for key in ('graph_name', 'traversal_source', 'pool'):
         val = keyword_arguments.pop(key, None)
         if val is not None:
             query_kwargs[key] = val
-
     return query_kwargs

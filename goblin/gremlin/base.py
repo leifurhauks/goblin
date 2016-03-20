@@ -220,20 +220,9 @@ class BaseGremlinMethod(object):
         #     context = "other"
         context = "TODO"
         context = "{}.{}".format(context, self.method_name)
-        tmp = connection.execute_query(script, params, context=context,
-                                       **query_kwargs)  # Temporary hack
-        # except GoblinQueryError as pqe:  # pragma: no cover
-        #     import pprint
-        #     msg = "Error while executing Gremlin method\n\n"
-        #     msg += "[Method]\n{}\n\n".format(self.method_name)
-        #     msg += "[Params]\n{}\n\n".format(pprint.pformat(params))
-        #     msg += "[Function Body]\n{}\n".format(self.function_body)
-        #     msg += "[Imports]\n{}\n".format(import_string)
-        #     msg += "\n[Error]\n{}\n".format(pqe)
-        #     if hasattr(pqe, 'raw_response'):
-        #         msg += "\n[Raw Response]\n{}\n".format(pqe.raw_response)
-        #     raise GoblinGremlinException(msg)
-        return tmp
+        return connection.execute_query(script, bindings=params,
+                                        context=context, **query_kwargs)
+
 
     def transform_params_to_database(self, params):
         """
@@ -294,7 +283,7 @@ class GremlinMethod(BaseGremlinMethod):
     def __call__(self, instance, *args, **kwargs):
         future_results = super(GremlinMethod, self).__call__(
             instance, *args, **kwargs)
-        future = connection.future_class()
+        future = connection.Future()
 
         def on_call(f):
             try:
@@ -313,7 +302,7 @@ class GremlinValue(GremlinMethod):
     """Gremlin Method that returns one value"""
 
     def __call__(self, instance, *args, **kwargs):
-        future = connection.future_class()
+        future = connection.Future()
         future_result = super(GremlinValue, self).__call__(instance, *args,
                                                            **kwargs)
 

@@ -10,6 +10,7 @@ from goblin.exceptions import (
 from goblin.gremlin import GremlinMethod
 from .element import Element, ElementMetaClass, vertex_types
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -190,10 +191,10 @@ class Vertex(Element):
             raise GoblinQueryError("ids must be of type list or tuple")
 
         handlers = []
-        future = connection.future_class()
+        future = connection.Future()
         if len(ids) == 0:
             future_results = connection.execute_query(
-                'g.V.hasLabel(x)', params={"x": cls.get_label()}, **kwargs)
+                'g.V.hasLabel(x)', bindings={"x": cls.get_label()}, **kwargs)
 
         else:
             strids = [str(i) for i in ids]
@@ -251,7 +252,7 @@ class Vertex(Element):
 
         """
         reloaded_values = {}
-        future = connection.future_class()
+        future = connection.Future()
         future_result = connection.execute_query(
             'g.V(vid)', {'vid': self._id}, **kwargs)
 
@@ -295,7 +296,7 @@ class Vertex(Element):
         if not id:
             raise cls.DoesNotExist
         future_results = cls.all([id], **kwargs)
-        future = connection.future_class()
+        future = connection.Future()
 
         def on_read(f2):
             try:
@@ -340,7 +341,7 @@ class Vertex(Element):
         label = self.get_label()
         # params['element_type'] = self.get_element_type()  don't think we need
         # Here this is a future, have to set handler in callback
-        future = connection.future_class()
+        future = connection.Future()
         future_result = self._save_vertex(label, params, **kwargs)
 
         def on_read(f2):
@@ -374,7 +375,7 @@ class Vertex(Element):
             raise GoblinQueryError('Cant delete abstract elements')
         if self._id is None:  # pragma: no cover
             return self
-        future = connection.future_class()
+        future = connection.Future()
         future_result = self._delete_vertex()
 
         def on_read(f2):
@@ -447,7 +448,7 @@ class Vertex(Element):
             end = offset + limit
         else:
             start = end = None
-        future = connection.future_class()
+        future = connection.Future()
         future_result = self._traversal(operation,
                                         label_strings,
                                         start,
@@ -496,7 +497,7 @@ class Vertex(Element):
                                       "classes, instances, or strings")
             label_strings.append(label_string)
 
-        future = connection.future_class()
+        future = connection.Future()
         future_result = self._delete_related(operation, label_strings)
 
         def on_read(f2):

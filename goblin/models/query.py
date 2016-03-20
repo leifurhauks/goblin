@@ -151,7 +151,8 @@ class V(object):
             return results
 
         future_results = connection.execute_query(
-            script, params=self._bindings, handler=process_results, **kwargs)
+            script, bindings=self._bindings, handler=process_results,
+            **kwargs)
 
         return future_results
 

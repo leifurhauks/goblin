@@ -3,7 +3,7 @@ from unittest import TestCase
 from nose.tools import nottest
 from tornado.ioloop import IOLoop
 from tornado.testing import gen_test, AsyncTestCase
-from goblin.connection import setup, sync_spec, close_global_pool
+from goblin.connection import setup, sync_spec, tear_down
 from goblin.models import Vertex, Edge
 from goblin.properties import Double, Integer, String
 import os
@@ -69,12 +69,11 @@ class BaseGoblinTestCase(AsyncTestCase):
     @classmethod
     def setUpClass(cls):
         super(BaseGoblinTestCase, cls).setUpClass()
-        #sync_spec(filename='test.spec', host='192.168.133.12', graph_name='graph')
-        setup(os.getenv('TITAN_REXPRO_URL', 'localhost'), graph_name='graph')
+        setup("ws://localhost:8182/")
 
     @classmethod
     def tearDownClass(cls):
-        close_global_pool()
+        tear_down()
         super(BaseGoblinTestCase, cls).tearDownClass()
 
     def get_new_ioloop(self):

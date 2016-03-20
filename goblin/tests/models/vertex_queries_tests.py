@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
 
-from goblin.connection import GoblinQueryError
+from goblin.exceptions import GoblinQueryError
 from goblin.tests.base import BaseGoblinTestCase
 from goblin.models import V, Edge, Vertex, GREATER_THAN
 from goblin.properties import Integer, Double

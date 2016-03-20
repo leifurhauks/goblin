@@ -304,7 +304,7 @@ class BaseElement(object):
         Reload the given element from the database.
 
         """
-        future = connection.future_class()
+        future = connection.Future()
         future_values = self._reload_values(**kwargs)
 
         def on_reload(f):

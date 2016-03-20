@@ -235,7 +235,8 @@ class SessionPoolManager(object):
 
         # assign optional binding variables
         if self.bindings:
-            connection.execute_query('g', params=self.bindings, isolate=False, pool=self.pool)
+            connection.execute_query(
+                'g', bindings=self.bindings, isolate=False, pool=self.pool)
 
         # patch execute_query if we're running non-concurrently
         if connection.CONNECTION_TYPE == Connection:
@@ -244,7 +245,7 @@ class SessionPoolManager(object):
                                 pool=self.pool, *args, **kwargs):
                 params = params or {}
                 return self.original_execute_query(
-                    query, params=params, transaction=transaction, isolate=isolate, pool=pool, *args, **kwargs
+                    query, bindings=params, transaction=transaction, isolate=isolate, pool=pool, *args, **kwargs
                 )
 
             # patch execute_query to re-use the pool with session
