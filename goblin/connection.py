@@ -134,7 +134,7 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
     _netloc = parsed_url.netloc
 
     if pool_class is None:
-        pool_class = _get_pool_class(pool_class)
+        pool_class = _get_pool_class()
 
     try:
         _client_module = pool_class.__module__.split('.')[1]
