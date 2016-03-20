@@ -133,7 +133,8 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
     _scheme = parsed_url.scheme
     _netloc = parsed_url.netloc
 
-    pool_class = _get_pool_class(pool_class)
+    if pool_class is None:
+        pool_class = _get_pool_class(pool_class)
 
     try:
         _client_module = pool_class.__module__.split('.')[1]
@@ -158,18 +159,16 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
     # Model/schema sync will run here as well as indexing
 
 
-def _get_pool_class(pool_class):
-    if pool_class is None:
+def _get_pool_class():
+    try:
+        from gremlinclient.tornado_client import Pool
+    except ImportError:
         try:
-            from gremlinclient.tornado_client import Pool
+            from gremlinclient.aiohttp_client import Pool
         except ImportError:
-            try:
-                from gremlinclient.aiohttp_client import Pool
-            except ImportError:
-                raise ImportError(
-                    "Install appropriate client or pass pool explicitly")
-        pool_class = Pool
-    return pool_class
+            raise ImportError(
+                "Install appropriate client or pass pool explicitly")
+    return Pool
 
 
 def _get_connector(ssl_context):
@@ -181,10 +180,10 @@ def _get_connector(ssl_context):
             import aiohttp
             connector = aiohttp.TCPConnector(ssl_context=ssl_context,
                                              loop=loop)
-        elif _client_module == TORNADO_CLIENT_MODULE:
 
-            from tornado import httpclient
+        elif _client_module == TORNADO_CLIENT_MODULE:
             from functools import partial
+            from tornado import httpclient
             connector = partial(
                 httpclient.HTTPRequest, ssl_options=sslcontext)
         else:
