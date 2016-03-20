@@ -191,7 +191,7 @@ def _get_connector(ssl_context):
     elif _scheme in INSECURE_SCHEMES:
         connector = None
     else:
-        raise RuntimeError("Unknown protocol")
+        raise ValueError("Unknown protocol")
     return connector
 
 
