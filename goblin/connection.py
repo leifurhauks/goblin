@@ -50,10 +50,8 @@ def execute_query(query, bindings=None, pool=None, graph_name=None,
         raise GoblinConnectionError(
             'Must call goblin.connection.setup before querying.')
 
-    if pool:
-        connection_pool = pool
-    else:
-        connection_pool = _connection_pool
+    if pool is None:
+        pool = _connection_pool
 
     if graph_name is None:
         graph_name = _graph_name
@@ -64,7 +62,7 @@ def execute_query(query, bindings=None, pool=None, graph_name=None,
     aliases = {"graph": graph_name, "g": traversal_source}
 
     future = Future()
-    future_conn = connection_pool.acquire()
+    future_conn = pool.acquire()
 
     def on_connect(f):
         try:
