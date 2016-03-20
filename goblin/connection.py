@@ -46,6 +46,10 @@ def execute_query(query, bindings=None, pool=None, graph_name=None,
 
     :returns: Future
     """
+    if Future is None:
+        raise GoblinConnectionError(
+            'Must call goblin.connection.setup before querying.')
+
     if pool:
         connection_pool = pool
     else:
@@ -58,10 +62,6 @@ def execute_query(query, bindings=None, pool=None, graph_name=None,
         traversal_source = _traversal_source
 
     aliases = {"graph": graph_name, "g": traversal_source}
-
-    if not connection_pool:  # pragma: no cover
-        raise GoblinConnectionError(
-            'Must call goblin.connection.setup before querying.')
 
     future = Future()
     future_conn = connection_pool.acquire()
