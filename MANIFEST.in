@@ -2,5 +2,5 @@ include AUTHORS
 include LICENSE
 include README.rst
 recursive-include goblin *.py *.groovy VERSION
-recursive-exclude goblin/tests
-recursive-exclude goblin/metrics
+recursive-exclude goblin/tests *
+recursive-exclude goblin/metrics *

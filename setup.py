@@ -61,8 +61,7 @@ setup(
                       'pytz>=2015.7',
                       'gremlinclient>=0.2.5',
                       'six>=1.10.0',
-                      'factory-boy>=2.6.0',
-                      'pyformance>=0.3.2'],
+                      'factory-boy>=2.6.0'],
     extras_require={
         'develop': develop_requires,
         'newrelic': ['newrelic>=2.60.0.46'],
