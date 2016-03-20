@@ -89,7 +89,7 @@ def tear_down():
 
 def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
           username='', password='', pool_size=256, future_class=None,
-          ssl_context=None, loop=None):
+          ssl_context=None, connector=None, loop=None):
     """
     This function is responsible for instantiating the global variables that
     provide :py:mod:`goblin` connection configuration params.
@@ -116,6 +116,8 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
         :py:class:`tornado.concurrent.Future`
     :param ssl.SSLContext ssl_context: :py:class:`ssl.SSLContext` for secure
         protocol
+    :param connector: connector used to establish :py:mod:`gremlinclient`
+        connection. Overides ssl_context param.
     :param loop: io loop.
     """
     global Future
@@ -140,7 +142,8 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
     except IndexError:
         raise ValueError("Unknown client module.")
 
-    connector = _get_connector(ssl_context)
+    if connector is None:
+        connector = _get_connector(ssl_context)
 
     _connection_pool = pool_class(url,
                                   maxsize=pool_size,
