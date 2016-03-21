@@ -48,7 +48,7 @@ from pytz import utc
 from tornado.platform.asyncio import AsyncIOMainLoop
 
 from goblin import properties
-from goblin.connection import setup, close_global_pool
+from goblin.connection import setup, tear_down
 from goblin.models import Vertex, Edge, V
 from goblin.relationships import Relationship
 
@@ -176,11 +176,11 @@ async def main():
 
 
 if __name__ == "__main__":
-    setup("localhost", future=asyncio.Future)
+    setup("ws://localhost:8182", future=asyncio.Future)
     AsyncIOMainLoop().install()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
-    close_global_pool()  # maybe this should be teardown
+    tear_down()  # maybe this should be teardown
     loop.close()
 ```
 
@@ -243,7 +243,7 @@ import asyncio
 import pulsar
 
 from goblin import properties
-from goblin.connection import setup, close_global_pool
+from goblin.connection import setup, tear_down
 from goblin.models import Vertex
 from gremlinclient.aiohttp_client import Pool
 
@@ -275,7 +275,7 @@ class Creator:
 
     def __init__(self):
         # Allow passing of config args
-        setup('localhost', pool_class=Pool, future=asyncio.Future)
+        setup('ws://localhost:8182', pool_class=Pool, future=asyncio.Future)
         cfg = pulsar.Config()
         cfg.parse_command_line()
         # Arbiter controls the main event loop in master process
@@ -299,7 +299,7 @@ class Creator:
             self._loop.call_soon(pulsar.ensure_future, self(actor))
         else:
             # Stop the event loop
-            yield from close_global_pool()
+            yield from tear_down()
             pulsar.arbiter().stop()
 ```
 
@@ -326,7 +326,7 @@ from pulsar.apps.wsgi.utils import LOGGER
 from pulsar.utils.httpurl import JSON_CONTENT_TYPES
 
 from goblin import properties
-from goblin.connection import setup, close_global_pool
+from goblin.connection import setup, tear_down
 from goblin.models import Vertex
 from gremlinclient.aiohttp_client import Pool
 
@@ -349,7 +349,7 @@ class TitanRPCSite(wsgi.LazyWsgi):
     """Handler for the RPCServer"""
 
     def __init__(self):
-        setup("localhost", pool_class=Pool, future=asyncio.Future)
+        setup("ws://localhost:8182", pool_class=Pool, future=asyncio.Future)
 
     def setup(self, environ):
         commands = rpc.PulsarServerCommands()
@@ -367,7 +367,7 @@ class TitanRPCServer(wsgi.WSGIServer):
     """Adds a hook that closes pool when the server is stopped."""
     def monitor_stopping(self, monitor):
         loop = monitor._loop
-        loop.call_soon(ensure_future, close_global_pool())
+        loop.call_soon(ensure_future, tear_down())
 
 
 def server(callable=None, **params):
