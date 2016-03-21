@@ -164,7 +164,7 @@ class DateTimeUTCValidator(BaseValidator):
                 value = value.astimezone(tz=utc)
             except ValueError:  # last ditch effort
                 try:
-                    value = value.replace(tz=utc)
+                    value = value.replace(tzinfo=utc)
                 except (AttributeError, TypeError):
                     raise ValidationError(
                         self.message.format(value), code=self.code)

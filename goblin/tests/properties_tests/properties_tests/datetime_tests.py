@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+import unittest
 from nose.plugins.attrib import attr
 from nose.tools import nottest
 
@@ -8,6 +9,7 @@ from goblin.tests import BaseGoblinTestCase
 from goblin._compat import PY2
 from .base_tests import GraphPropertyBaseClassTestCase
 from goblin.properties.properties import DateTime, GraphProperty
+from goblin.properties.validators import DateTimeUTCValidator
 from goblin.models import Vertex
 from goblin.exceptions import ValidationError
 from goblin._compat import print_
@@ -119,3 +121,16 @@ class TestVertexChoicesTestCase(BaseGoblinTestCase):
             self.assertEqual(dt.test_val, 'C')
             print_("deleting vertex")
             yield dt.delete()
+
+
+class TestUTCValidator(unittest.TestCase):
+
+    def test_replace_naive(self):
+        now = datetime.datetime.now()
+        validator = DateTimeUTCValidator()
+        try:
+            validator(now)
+            error = False
+        except:
+            error = True
+        self.assertFalse(error)
