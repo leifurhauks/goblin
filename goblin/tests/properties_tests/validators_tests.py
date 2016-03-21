@@ -140,11 +140,11 @@ class DateTimeValidatorTestCase(ValidatorBaseClassTestCase):
 @attr('unit', 'property')
 class DateTimeUTCValidatorTestCase(ValidatorBaseClassTestCase):
     klass = DateTimeUTCValidator()
-    good_cases = (datetime.datetime.now(tz=utc), None)
+    good_cases = (datetime.datetime.now(tz=utc), None, datetime.datetime.now())
     if PY2:
-        bad_cases = ('val', [], (), {}, 0, long(1), False, 1.1, datetime.datetime.now())
+        bad_cases = ('val', [], (), {}, 0, long(1), False, 1.1)
     else:
-        bad_cases = ('val', [], (), {}, 0, False, 1.1, datetime.datetime.now())
+        bad_cases = ('val', [], (), {}, 0, False, 1.1)
 
 
 @attr('unit', 'validators')
