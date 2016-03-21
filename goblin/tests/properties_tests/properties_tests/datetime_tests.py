@@ -20,12 +20,12 @@ from pytz import utc
 @attr('unit', 'property', 'property_datetime_utc')
 class DateTimePropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = DateTime
-    good_cases = (datetime.datetime.now(tz=utc), None)
+    good_cases = (datetime.datetime.now(tz=utc), None, datetime.datetime.now())
     if PY2:
         bad_cases = (
-            'val', [], (), {}, 0, long(1), False, 1.1, datetime.datetime.now())
+            'val', [], (), {}, 0, long(1), False, 1.1)
     else:
-        bad_cases = ('val', [], (), {}, 0, False, 1.1, datetime.datetime.now())
+        bad_cases = ('val', [], (), {}, 0, False, 1.1)
 
     def test_to_database_method(self):
         d = self.klass(strict=False)
@@ -121,16 +121,3 @@ class TestVertexChoicesTestCase(BaseGoblinTestCase):
             self.assertEqual(dt.test_val, 'C')
             print_("deleting vertex")
             yield dt.delete()
-
-
-class TestUTCValidator(unittest.TestCase):
-
-    def test_replace_naive(self):
-        now = datetime.datetime.now()
-        validator = DateTimeUTCValidator()
-        try:
-            validator(now)
-            error = False
-        except:
-            error = True
-        self.assertFalse(error)
