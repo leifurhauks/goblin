@@ -119,7 +119,7 @@ class Edge(Element):
         if isinstance(value, integer_types + float_types):
             value_type = True
 
-        future = connection.Future()
+        future = connection._future()
         future_results = cls._find_edge_by_value(
             value_type=value_type,
             elabel=_label,
@@ -242,7 +242,7 @@ class Edge(Element):
         Save this edge to the graph database.
         """
         super(Edge, self).save()
-        future = connection.Future()
+        future = connection._future()
         future_result = self._save_edge(self._outV,
                                         self._inV,
                                         self.get_label(),
@@ -274,7 +274,7 @@ class Edge(Element):
     def _reload_values(self, *args, **kwargs):
         """ Re-read the values for this edge from the graph database. """
         reloaded_values = {}
-        future = connection.Future()
+        future = connection._future()
         future_result = connection.execute_query(
             'g.E(eid)', {'eid': self._id}, **kwargs)
 
@@ -323,7 +323,7 @@ class Edge(Element):
         """
         if not id:
             raise cls.DoesNotExist
-        future = connection.Future()
+        future = connection._future()
         future_result = cls.all([id], **kwargs)
 
         def on_read(f2):
@@ -383,7 +383,7 @@ class Edge(Element):
         if self._id is None:
             return self
 
-        future = connection.Future()
+        future = connection._future()
         future_result = self._delete_edge()
 
         def on_read(f2):

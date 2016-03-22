@@ -60,7 +60,7 @@ def execute_query(query, bindings=None, pool=None, future_class=None,
 
     aliases = {"graph": graph_name, "g": traversal_source}
 
-    future = Future()
+    future = future_class()
     future_conn = pool.acquire()
 
     def on_connect(f):
