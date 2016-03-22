@@ -191,7 +191,7 @@ class Vertex(Element):
             raise GoblinQueryError("ids must be of type list or tuple")
 
         handlers = []
-        future = connection.Future()
+        future = connection._future()
         if len(ids) == 0:
             future_results = connection.execute_query(
                 'g.V.hasLabel(x)', bindings={"x": cls.get_label()}, **kwargs)
@@ -252,7 +252,7 @@ class Vertex(Element):
 
         """
         reloaded_values = {}
-        future = connection.Future()
+        future = connection._future()
         future_result = connection.execute_query(
             'g.V(vid)', {'vid': self._id}, **kwargs)
 
@@ -296,7 +296,7 @@ class Vertex(Element):
         if not id:
             raise cls.DoesNotExist
         future_results = cls.all([id], **kwargs)
-        future = connection.Future()
+        future = connection._future()
 
         def on_read(f2):
             try:
@@ -341,7 +341,7 @@ class Vertex(Element):
         label = self.get_label()
         # params['element_type'] = self.get_element_type()  don't think we need
         # Here this is a future, have to set handler in callback
-        future = connection.Future()
+        future = connection._future()
         future_result = self._save_vertex(label, params, **kwargs)
 
         def on_read(f2):
@@ -375,7 +375,7 @@ class Vertex(Element):
             raise GoblinQueryError('Cant delete abstract elements')
         if self._id is None:  # pragma: no cover
             return self
-        future = connection.Future()
+        future = connection._future()
         future_result = self._delete_vertex()
 
         def on_read(f2):
@@ -448,7 +448,7 @@ class Vertex(Element):
             end = offset + limit
         else:
             start = end = None
-        future = connection.Future()
+        future = connection._future()
         future_result = self._traversal(operation,
                                         label_strings,
                                         start,
@@ -497,7 +497,7 @@ class Vertex(Element):
                                       "classes, instances, or strings")
             label_strings.append(label_string)
 
-        future = connection.Future()
+        future = connection._future()
         future_result = self._delete_related(operation, label_strings)
 
         def on_read(f2):

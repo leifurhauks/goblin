@@ -283,7 +283,7 @@ class GremlinMethod(BaseGremlinMethod):
     def __call__(self, instance, *args, **kwargs):
         future_results = super(GremlinMethod, self).__call__(
             instance, *args, **kwargs)
-        future = connection.Future()
+        future = connection._future()
 
         def on_call(f):
             try:
@@ -302,7 +302,7 @@ class GremlinValue(GremlinMethod):
     """Gremlin Method that returns one value"""
 
     def __call__(self, instance, *args, **kwargs):
-        future = connection.Future()
+        future = connection._future()
         future_result = super(GremlinValue, self).__call__(instance, *args,
                                                            **kwargs)
 

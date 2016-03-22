@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 # Global vars
-Future = None
+_future = None
 _connection_pool = None
 _graph_name = None
 _traversal_source = None
@@ -24,9 +24,9 @@ _netloc = None
 _client_module = None
 
 
-def execute_query(query, bindings=None, pool=None, graph_name=None,
-                  traversal_source=None, username="", password="",
-                  handler=None, *args, **kwargs):
+def execute_query(query, bindings=None, pool=None, future_class=None,
+                  graph_name=None, traversal_source=None, username="",
+                  password="", handler=None, *args, **kwargs):
     """
     Execute a raw Gremlin query with the given parameters passed in.
 
@@ -46,12 +46,11 @@ def execute_query(query, bindings=None, pool=None, graph_name=None,
 
     :returns: Future
     """
-    if Future is None:
-        raise GoblinConnectionError(
-            'Must call goblin.connection.setup before querying.')
-
     if pool is None:
         pool = _connection_pool
+
+    if future_class is None:
+        future_class = _future
 
     if graph_name is None:
         graph_name = _graph_name
@@ -118,7 +117,7 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
         connection. Overides ssl_context param.
     :param loop: io loop.
     """
-    global Future
+    global _future
     global _connection_pool
     global _graph_name
     global _traversal_source
@@ -150,11 +149,11 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
                                   password=password,
                                   force_release=True,
                                   future_class=future_class,
-                                  connector=connector)
+                                  connector=connector,
+                                  loop=loop)
 
-    if future_class is None:
-        future_class = _connection_pool.graph.future_class
-    Future = future_class
+    future_class = _connection_pool.graph.future_class
+    _future = future_class
 
     # Model/schema sync will run here as well as indexing
 

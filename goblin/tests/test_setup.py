@@ -10,7 +10,7 @@ class TestSetup(unittest.TestCase):
 
     def test_default_setup_teardown(self):
         connection.setup("ws://localhost:8182/")
-        self.assertEqual(connection.Future, concurrent.Future)
+        self.assertEqual(connection._future, concurrent.Future)
         self.assertIsInstance(connection._connection_pool, tornado_client.Pool)
         self.assertEqual(connection._graph_name, "graph")
         self.assertEqual(connection._traversal_source, "g")
