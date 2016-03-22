@@ -10,6 +10,44 @@ As Gremlin approached The TinkerPop, ``mogwai`` felt left behind and the closer 
 
 ``Goblin`` uses @davebshow [gremlinclient](https://github.com/davebshow/gremlinclient) for asynchronous websocket based communication with the Gremlin Server, and is therefore designed to be multi-platform, allowing the user to choose between [Tornado](http://www.tornadoweb.org/en/stable/), [Trollius](http://trollius.readthedocs.org/), or [Asyncio](https://docs.python.org/3/library/asyncio.html). It aims to provide full support for all TinkerPop3 enabled graph databases; however, it is currently only tested against [Titan:db 1.x](http://s3.thinkaurelius.com/docs/titan/1.0.0/index.html). This project is under active development.
 
+### Basic Example
+
+```python
+from tornado import gen
+from tornado.ioloop import IOLoop
+from goblin import properties
+from goblin import connection
+from goblin.models import Vertex, Edge, V
+
+
+class User(Vertex):
+    name = properties.String()
+
+
+class Follows(Edge):
+    pass
+
+
+@gen.coroutine
+def go():
+    goblin = yield User.create(name="Goblin")
+    gremlin = yield User.create(name="Gremlin")
+    gob_follows_grem = yield Follows.create(goblin, gremlin)
+    # Find gremlin's followers
+    stream = yield V(gremlin).in_step().get()
+    followers = yield stream.read()
+    return followers
+
+
+connection.setup("ws://localhost:8182")
+loop = IOLoop.current()
+try:
+    followers = loop.run_sync(go)
+finally:
+    connection.tear_down()
+    loop.close()
+```
+
 ### Example Usage:
 
 Download Titan, unzip, and fire it up:
