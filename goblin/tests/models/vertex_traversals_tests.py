@@ -215,8 +215,8 @@ class TestVertexTraversals(BaseTraversalTestCase):
 class TestVertexCentricQueries(BaseTraversalTestCase):
 
     @gen_test
-    def test_out(self):
-        stream = yield V(self.jon).out().get()
+    def test_out_step(self):
+        stream = yield V(self.jon).out_step().get()
         results = yield stream.read()
         self.assertIn(self.beekeeping, results)
 
@@ -236,15 +236,15 @@ class TestVertexCentricQueries(BaseTraversalTestCase):
 
     @gen_test
     def test_out_labels(self):
-        stream = yield V(self.jon).out(EnrolledIn).get()
+        stream = yield V(self.jon).out_step(EnrolledIn).get()
         results = yield stream.read()
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].name, "Beekeeping")
-        stream = yield V(self.jon).out(BelongsTo).get()
+        stream = yield V(self.jon).out_step(BelongsTo).get()
         results = yield stream.read()
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].name, "Distributed Development")
-        stream = yield V(self.jon).out(BelongsTo, EnrolledIn).get()
+        stream = yield V(self.jon).out_step(BelongsTo, EnrolledIn).get()
         results = yield stream.read()
         self.assertEqual(len(results), 2)
         self.assertIn(self.dist_dev, results)
@@ -422,7 +422,7 @@ class TestVertexCentricQueries(BaseTraversalTestCase):
     @gen_test
     def test_has(self):
         # IDK about this whole get property by name thing
-        stream = yield V(self.jon).out().has(
+        stream = yield V(self.jon).out_step().has(
             ResearchGroup.get_property_by_name("name"),
             "Distributed Development").get()
         results = yield stream.read()
@@ -431,23 +431,23 @@ class TestVertexCentricQueries(BaseTraversalTestCase):
 
     @gen_test
     def test_has_lt_gt(self):
-        stream = yield V(self.jon).out().has(
+        stream = yield V(self.jon).out_step().has(
             Course.get_property_by_name("credits"), 5.0, GREATER_THAN).get()
         results = yield stream.read()
         self.assertEqual(len(results), 1)
-        stream = yield V(self.jon).out().has(
+        stream = yield V(self.jon).out_step().has(
             Course.get_property_by_name("credits"), 5.0, LESS_THAN).get()
         results = yield stream.read()
         self.assertEqual(len(results), 0)
 
     @gen_test
     def test_has_label(self):
-        stream = yield V(self.jon).out().has_label(
+        stream = yield V(self.jon).out_step().has_label(
             ResearchGroup.get_label()).get()
         results = yield stream.read()
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0], self.dist_dev)
-        stream = yield V(self.jon).out().has_label(
+        stream = yield V(self.jon).out_step().has_label(
             ResearchGroup.get_label(), Course.get_label()).get()
         results = yield stream.read()
         self.assertEqual(len(results), 2)
@@ -456,13 +456,13 @@ class TestVertexCentricQueries(BaseTraversalTestCase):
 
     @gen_test
     def test_has_id(self):
-        stream = yield V(self.jon).out().has_id(
+        stream = yield V(self.jon).out_step().has_id(
             self.dist_dev.id).get()
         results = yield stream.read()
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0], self.dist_dev)
         # This should work...
-        stream = yield V(self.jon).out().has_id(
+        stream = yield V(self.jon).out_step().has_id(
             self.dist_dev.id, self.beekeeping.id).get()
         results = yield stream.read()
         # self.assertEqual(len(results), 2)
@@ -472,12 +472,12 @@ class TestVertexCentricQueries(BaseTraversalTestCase):
     # Not working
     # @gen_test
     # def test_has_key(self):
-        # stream = yield V(self.jon).out().has_key(
+        # stream = yield V(self.jon).out_step().has_key(
         #     ResearchGroup.get_property_by_name("name")).get()
         # results = yield stream.read()
         # self.assertEqual(len(results), 1)
         # self.assertIn(self.dist_dev, results)
-        # stream = yield V(self.jon).out().has_key(
+        # stream = yield V(self.jon).out_step().has_key(
         #     Course.get_property_by_name("credits")).get()
         # results = yield stream.read()
         # self.assertEqual(len(results), 1)

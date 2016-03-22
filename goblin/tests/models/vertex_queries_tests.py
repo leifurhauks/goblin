@@ -63,7 +63,7 @@ class SimpleQueryTest(BaseGoblinTestCase):
     #     self.assertEqual(result._bindings['b0'], ("dave", 25))
 
     def test_out(self):
-        result = self.q.out("tweet", "user")
+        result = self.q.out_step("tweet", "user")
         self.assertEqual(result._get(), "out(*b0)")
         self.assertEqual(result._bindings['b0'], ["tweet", "user"])
 

@@ -72,7 +72,7 @@ class V(object):
     # def has_value(self, *values):
     #     return self._unpack_step("hasValue", values)
 
-    def out(self, *labels):
+    def out_step(self, *labels):
         labels = self._get_labels(labels)
         return self._unpack_step("out", labels)
 
