@@ -73,7 +73,6 @@ def execute_query(query, bindings=None, pool=None, future_class=None,
             conn = f.result()
 
         except Exception as e:
-            LOGGER.info("exc: {}".format(e))
             future.set_exception(e)
         else:
             stream = conn.send(
@@ -88,9 +87,7 @@ def execute_query(query, bindings=None, pool=None, future_class=None,
 
 def tear_down():
     """Close the global connection pool."""
-    from pulsar.apps.wsgi.utils import LOGGER
     global _connection_pool
-    LOGGER.info("tear_down_pool: {}".format(_connection_pool))
     if _connection_pool:
         return _connection_pool.close()
 
