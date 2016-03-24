@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
 from unittest import TestCase
 from nose.tools import nottest
+from tornado import concurrent
 from tornado.ioloop import IOLoop
 from tornado.testing import gen_test, AsyncTestCase
+from gremlinclient.tornado_client import Pool
 from goblin.connection import setup, sync_spec, tear_down
 from goblin.models import Vertex, Edge
 from goblin.properties import Double, Integer, String
@@ -69,7 +71,8 @@ class BaseGoblinTestCase(AsyncTestCase):
     @classmethod
     def setUpClass(cls):
         super(BaseGoblinTestCase, cls).setUpClass()
-        setup("ws://localhost:8182/")
+        setup("ws://localhost:8182/", pool_class=Pool,
+              future_class=concurrent.Future)
 
     @classmethod
     def tearDownClass(cls):

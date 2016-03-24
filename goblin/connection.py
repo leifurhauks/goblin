@@ -26,7 +26,7 @@ _client_module = None
 
 def execute_query(query, bindings=None, pool=None, future_class=None,
                   graph_name=None, traversal_source=None, username="",
-                  password="", handler=None, *args, **kwargs):
+                  password="", handler=None, request_id=None, *args, **kwargs):
     """
     Execute a raw Gremlin query with the given parameters passed in.
 
@@ -46,17 +46,22 @@ def execute_query(query, bindings=None, pool=None, future_class=None,
 
     :returns: Future
     """
+
     if pool is None:
         pool = _connection_pool
 
     if future_class is None:
         future_class = _future
 
+    if not pool and not future_class:
+        raise GoblinConnectionError(("Please call connection.setup or pass "
+                                     "pool and future_class explicitly"))
+
     if graph_name is None:
-        graph_name = _graph_name
+        graph_name = _graph_name or "graph"
 
     if traversal_source is None:
-        traversal_source = _traversal_source
+        traversal_source = _traversal_source or "g"
 
     aliases = {"graph": graph_name, "g": traversal_source}
 
@@ -66,11 +71,14 @@ def execute_query(query, bindings=None, pool=None, future_class=None,
     def on_connect(f):
         try:
             conn = f.result()
+
         except Exception as e:
+            LOGGER.info("exc: {}".format(e))
             future.set_exception(e)
         else:
             stream = conn.send(
-                query, bindings=bindings, aliases=aliases, handler=handler)
+                query, bindings=bindings, aliases=aliases, handler=handler,
+                request_id=request_id)
             future.set_result(stream)
 
     future_conn.add_done_callback(on_connect)
@@ -80,6 +88,9 @@ def execute_query(query, bindings=None, pool=None, future_class=None,
 
 def tear_down():
     """Close the global connection pool."""
+    from pulsar.apps.wsgi.utils import LOGGER
+    global _connection_pool
+    LOGGER.info("tear_down_pool: {}".format(_connection_pool))
     if _connection_pool:
         return _connection_pool.close()
 
@@ -149,7 +160,6 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
                                   password=password,
                                   force_release=True,
                                   future_class=future_class,
-                                  connector=connector,
                                   loop=loop)
 
     future_class = _connection_pool.graph.future_class
@@ -212,7 +222,7 @@ def pop_execute_query_kwargs(keyword_arguments):
         return non-None query kwargs in a dict
     """
     query_kwargs = {}
-    for key in ('graph_name', 'traversal_source', 'pool'):
+    for key in ('graph_name', 'traversal_source', 'pool', 'request_id'):
         val = keyword_arguments.pop(key, None)
         if val is not None:
             query_kwargs[key] = val
