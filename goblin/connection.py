@@ -219,7 +219,8 @@ def pop_execute_query_kwargs(keyword_arguments):
         return non-None query kwargs in a dict
     """
     query_kwargs = {}
-    for key in ('graph_name', 'traversal_source', 'pool', 'request_id'):
+    for key in ('graph_name', 'traversal_source', 'pool',
+                'request_id', 'raw_response'):
         val = keyword_arguments.pop(key, None)
         if val is not None:
             query_kwargs[key] = val

@@ -283,26 +283,34 @@ class GremlinMethod(BaseGremlinMethod):
     def __call__(self, instance, *args, **kwargs):
         future_results = super(GremlinMethod, self).__call__(
             instance, *args, **kwargs)
-        future = connection._future()
-
-        def on_call(f):
-            try:
-                stream = f.result()
-            except Exception as e:
-                future.set_exception(e)
-            else:
-                stream.add_handler(GremlinMethod._deserialize)
-                future.set_result(stream)
-        future_results.add_done_callback(on_call)
-
-        return future
+        raw_response = kwargs.pop('raw_response', False)
+        future_class = kwargs.pop('future_class', None)
+        if not raw_response:
+            if future_class is None:
+                future_class = connection._future
+            future = future_class()
+            def on_call(f):
+                try:
+                    stream = f.result()
+                except Exception as e:
+                    future.set_exception(e)
+                else:
+                    stream.add_handler(GremlinMethod._deserialize)
+                    future.set_result(stream)
+            future_results.add_done_callback(on_call)
+            return future
+        return future_results
 
 
 class GremlinValue(GremlinMethod):
     """Gremlin Method that returns one value"""
 
     def __call__(self, instance, *args, **kwargs):
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = super(GremlinValue, self).__call__(instance, *args,
                                                            **kwargs)
 

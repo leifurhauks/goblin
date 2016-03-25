@@ -100,7 +100,7 @@ class Relationship(object):
             return tuple(final_classes)
 
     @requires_vertex
-    def vertices(self, limit=None, offset=None, callback=None):
+    def vertices(self, limit=None, offset=None, callback=None, **kwargs):
         """ Query and return all Vertices attached to the current Vertex
 
         TODO: fix this, the instance method isn't properly setup
@@ -126,7 +126,11 @@ class Relationship(object):
             start = end = None
 
         operation = self.direction.lower() + 'V'
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = getattr(
             self.top_level_vertex, operation)(*allowed_elts)
 
@@ -147,7 +151,7 @@ class Relationship(object):
         return future
 
     @requires_vertex
-    def edges(self, limit=None, offset=None, callback=None):
+    def edges(self, limit=None, offset=None, callback=None, **kwargs):
         """ Query and return all Edges attached to the current Vertex
 
         TODO: fix this, the instance method isn't properly setup
@@ -170,7 +174,11 @@ class Relationship(object):
             start = end = None
 
         operation = self.direction.lower() + 'E'
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = getattr(
             self.top_level_vertex, operation)(*allowed_elts)
 
@@ -269,7 +277,7 @@ class Relationship(object):
 
     @requires_vertex
     def create(self, edge_params={}, vertex_params={}, edge_type=None,
-               vertex_type=None, callback=None):
+               vertex_type=None, callback=None, **kwargs):
         """ Creates a Relationship defined by the schema
 
         :param edge_params: (Optional) Parameters passed to the instantiation
@@ -299,7 +307,11 @@ class Relationship(object):
                 "That is not a valid relationship setup: %s <-%s-> %s" % (
                     edge_type, self.direction, vertex_type))
 
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         if isinstance(vertex_type, string_types):
 
             top_level_module = self.top_level_vertex.__module__

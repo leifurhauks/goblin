@@ -100,7 +100,7 @@ class Edge(Element):
         return self
 
     @classmethod
-    def find_by_value(cls, field, value, as_dict=False):
+    def find_by_value(cls, field, value, as_dict=False, **kwargs):
         """
         Returns edges that match the given field/value pair.
 
@@ -119,7 +119,11 @@ class Edge(Element):
         if isinstance(value, integer_types + float_types):
             value_type = True
 
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_results = cls._find_edge_by_value(
             value_type=value_type,
             elabel=_label,
@@ -242,7 +246,11 @@ class Edge(Element):
         Save this edge to the graph database.
         """
         super(Edge, self).save()
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = self._save_edge(self._outV,
                                         self._inV,
                                         self.get_label(),
@@ -274,7 +282,11 @@ class Edge(Element):
     def _reload_values(self, *args, **kwargs):
         """ Re-read the values for this edge from the graph database. """
         reloaded_values = {}
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = connection.execute_query(
             'g.E(eid)', {'eid': self._id}, **kwargs)
 
@@ -323,7 +335,11 @@ class Edge(Element):
         """
         if not id:
             raise cls.DoesNotExist
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = cls.all([id], **kwargs)
 
         def on_read(f2):
@@ -374,7 +390,7 @@ class Edge(Element):
         edge = super(Edge, cls).create(outV, inV, *args, **kwargs)
         return edge
 
-    def delete(self):
+    def delete(self, **kwargs):
         """
         Delete the current edge from the graph.
         """
@@ -383,7 +399,11 @@ class Edge(Element):
         if self._id is None:
             return self
 
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = self._delete_edge()
 
         def on_read(f2):

@@ -191,7 +191,11 @@ class Vertex(Element):
             raise GoblinQueryError("ids must be of type list or tuple")
 
         handlers = []
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         if len(ids) == 0:
             future_results = connection.execute_query(
                 'g.V.hasLabel(x)', bindings={"x": cls.get_label()}, **kwargs)
@@ -252,7 +256,11 @@ class Vertex(Element):
 
         """
         reloaded_values = {}
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = connection.execute_query(
             'g.V(vid)', {'vid': self._id}, **kwargs)
 
@@ -296,7 +304,11 @@ class Vertex(Element):
         if not id:
             raise cls.DoesNotExist
         future_results = cls.all([id], **kwargs)
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
 
         def on_read(f2):
             try:
@@ -341,19 +353,26 @@ class Vertex(Element):
         label = self.get_label()
         # params['element_type'] = self.get_element_type()  don't think we need
         # Here this is a future, have to set handler in callback
-        future = connection._future()
-        future_result = self._save_vertex(label, params, **kwargs)
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
 
+        future = future_class()
+        future_result = self._save_vertex(label, params, **kwargs)
+        raw_response = kwargs.pop('raw_response', False)
         def on_read(f2):
             try:
                 result = f2.result()
             except Exception as e:
                 future.set_exception(e)
             else:
-                result = result[0]
-                self._id = result._id
-                for k, v in self._values.items():
-                    v.previous_value = result._values[k].previous_value
+                if not raw_response:
+                    result = result[0]
+                    self._id = result._id
+                    for k, v in self._values.items():
+                        v.previous_value = result._values[k].previous_value
+                else:
+                    result = result.data
                 future.set_result(result)
 
         def on_save(f):
@@ -369,13 +388,17 @@ class Vertex(Element):
 
         return future
 
-    def delete(self):
+    def delete(self, **kwargs):
         """ Delete the current vertex from the graph. """
         if self.__abstract__:
             raise GoblinQueryError('Cant delete abstract elements')
         if self._id is None:  # pragma: no cover
             return self
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = self._delete_vertex()
 
         def on_read(f2):
@@ -404,7 +427,8 @@ class Vertex(Element):
                           labels,
                           limit=None,
                           offset=None,
-                          types=None):
+                          types=None,
+                          **kwargs):
         """
         Perform simple graph database traversals with ubiquitous pagination.
 
@@ -448,7 +472,11 @@ class Vertex(Element):
             end = offset + limit
         else:
             start = end = None
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = self._traversal(operation,
                                         label_strings,
                                         start,
@@ -472,7 +500,7 @@ class Vertex(Element):
         future_result.add_done_callback(on_traversal)
         return future
 
-    def _simple_deletion(self, operation, labels):
+    def _simple_deletion(self, operation, labels, **kwargs):
         """
         Perform simple bulk graph deletion operation.
 
@@ -497,7 +525,11 @@ class Vertex(Element):
                                       "classes, instances, or strings")
             label_strings.append(label_string)
 
-        future = connection._future()
+        future_class = kwargs.pop('future_class', None)
+        if future_class is None:
+            future_class = connection._future
+
+        future = future_class()
         future_result = self._delete_related(operation, label_strings)
 
         def on_read(f2):
@@ -619,24 +651,24 @@ class Vertex(Element):
         """
         return self._simple_traversal('bothV', labels, **kwargs)
 
-    def delete_outE(self, *labels):
+    def delete_outE(self, *labels, **kwargs):
         """Delete all outgoing edges with the given label."""
-        return self._simple_deletion('outE', labels)
+        return self._simple_deletion('outE', labels, **kwargs)
 
-    def delete_inE(self, *labels):
+    def delete_inE(self, *labels, **kwargs):
         """Delete all incoming edges with the given label."""
-        return self._simple_deletion('inE', labels)
+        return self._simple_deletion('inE', labels, **kwargs)
 
-    def delete_outV(self, *labels):
+    def delete_outV(self, *labels, **kwargs):
         """
         Delete all outgoing vertices connected with edges with the given
         label.
         """
-        return self._simple_deletion('outV', labels)
+        return self._simple_deletion('outV', labels, **kwargs)
 
-    def delete_inV(self, *labels):
+    def delete_inV(self, *labels, **kwargs):
         """Delete all incoming vertices connected with edges with the given label."""
-        return self._simple_deletion('inV', labels)
+        return self._simple_deletion('inV', labels, **kwargs)
 
     def query(self):
         from goblin.models.query import Query

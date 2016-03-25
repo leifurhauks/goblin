@@ -76,6 +76,6 @@ setup(
     url='https://github.com/ZEROFAIL/goblin',
     license='Apache Software License 2.0',
     packages=find_packages(
-        exclude=["*.tests.*", "*.tests", "*.metrics", "examples"]),
+        exclude=["*.metrics", "examples"]),
     include_package_data=True,
 )
