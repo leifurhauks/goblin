@@ -191,7 +191,7 @@ class Vertex(Element):
             raise GoblinQueryError("ids must be of type list or tuple")
 
         handlers = []
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -256,7 +256,7 @@ class Vertex(Element):
 
         """
         reloaded_values = {}
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -304,7 +304,7 @@ class Vertex(Element):
         if not id:
             raise cls.DoesNotExist
         future_results = cls.all([id], **kwargs)
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -353,7 +353,7 @@ class Vertex(Element):
         label = self.get_label()
         # params['element_type'] = self.get_element_type()  don't think we need
         # Here this is a future, have to set handler in callback
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -394,7 +394,7 @@ class Vertex(Element):
             raise GoblinQueryError('Cant delete abstract elements')
         if self._id is None:  # pragma: no cover
             return self
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -472,7 +472,7 @@ class Vertex(Element):
             end = offset + limit
         else:
             start = end = None
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -525,7 +525,7 @@ class Vertex(Element):
                                       "classes, instances, or strings")
             label_strings.append(label_string)
 
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 

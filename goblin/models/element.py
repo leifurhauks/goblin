@@ -304,7 +304,7 @@ class BaseElement(object):
         Reload the given element from the database.
 
         """
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 

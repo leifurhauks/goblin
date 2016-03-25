@@ -283,8 +283,8 @@ class GremlinMethod(BaseGremlinMethod):
     def __call__(self, instance, *args, **kwargs):
         future_results = super(GremlinMethod, self).__call__(
             instance, *args, **kwargs)
-        raw_response = kwargs.pop('raw_response', False)
-        future_class = kwargs.pop('future_class', None)
+        raw_response = kwargs.get('raw_response', False)
+        future_class = kwargs.get('future_class', None)
         if not raw_response:
             if future_class is None:
                 future_class = connection._future
@@ -306,7 +306,7 @@ class GremlinValue(GremlinMethod):
     """Gremlin Method that returns one value"""
 
     def __call__(self, instance, *args, **kwargs):
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 

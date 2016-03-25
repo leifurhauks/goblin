@@ -42,7 +42,6 @@ class TestEdgeIO(BaseGoblinTestCase):
         try:
             e1.test_val = 20
             yield e1.save()
-
             stream = yield v1.outE()
             edges = yield stream.read()
             self.assertEqual(len(edges), 1)

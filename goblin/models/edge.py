@@ -119,7 +119,7 @@ class Edge(Element):
         if isinstance(value, integer_types + float_types):
             value_type = True
 
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -246,7 +246,7 @@ class Edge(Element):
         Save this edge to the graph database.
         """
         super(Edge, self).save()
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -282,7 +282,7 @@ class Edge(Element):
     def _reload_values(self, *args, **kwargs):
         """ Re-read the values for this edge from the graph database. """
         reloaded_values = {}
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -335,7 +335,7 @@ class Edge(Element):
         """
         if not id:
             raise cls.DoesNotExist
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -399,7 +399,7 @@ class Edge(Element):
         if self._id is None:
             return self
 
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 

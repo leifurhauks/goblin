@@ -220,7 +220,7 @@ def pop_execute_query_kwargs(keyword_arguments):
     """
     query_kwargs = {}
     for key in ('graph_name', 'traversal_source', 'pool',
-                'request_id', 'raw_response'):
+                'request_id', 'future_class', 'raw_response'):
         val = keyword_arguments.pop(key, None)
         if val is not None:
             query_kwargs[key] = val

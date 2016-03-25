@@ -126,7 +126,7 @@ class Relationship(object):
             start = end = None
 
         operation = self.direction.lower() + 'V'
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -174,7 +174,7 @@ class Relationship(object):
             start = end = None
 
         operation = self.direction.lower() + 'E'
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
@@ -307,7 +307,7 @@ class Relationship(object):
                 "That is not a valid relationship setup: %s <-%s-> %s" % (
                     edge_type, self.direction, vertex_type))
 
-        future_class = kwargs.pop('future_class', None)
+        future_class = kwargs.get('future_class', None)
         if future_class is None:
             future_class = connection._future
 
