@@ -417,10 +417,17 @@ class Edge(Element):
         :rtype: list
 
         """
-        future = connection.get_future(kwargs)
-        results = connection.execute_query(
-            'g.e(id).%s()' % operation, {'id': self.id}, **kwargs)
-        return [Element.deserialize(r) for r in results]
+        deserialize = kwargs.pop('deserialize', True)
+
+        def edge_traversal_handler(data):
+            if deserialize:
+                data = [Element.deserialize(d) for d in data]
+            return data
+
+        future_results = connection.execute_query(
+            'g.e(id).%s()' % operation, {'id': self.id},
+            handler=edge_traversal_handler, **kwargs)
+        return
 
     def inV(self, *args, **kwargs):
         """
@@ -430,24 +437,96 @@ class Edge(Element):
 
         """
         from goblin.models.vertex import Vertex
-
+        future = connection.get_future(kwargs)
         if self._inV is None:
-            self._inV = self._simple_traversal('inV', **kwargs)[0]
-        if isinstance(self._inV, string_types + integer_types):
-            self._inV = Vertex.get(self._inV, **kwargs)
-        return self._inV
+            future_results = self._simple_traversal('inV', **kwargs)
+
+            def on_traversal(f):
+                try:
+                    result = f.result()
+                except Exception as e:
+                    future.set_exception(e)
+                else:
+                    self._inV = result[0]
+                    if isinstance(self._inV, string_types + integer_types):
+                        future_results = Vertex.get(self._inV, **kwargs)
+
+                        def on_get(f2):
+                            try:
+                                result = f2.result()
+                            except Exception as e:
+                                future.set_exception(e)
+                            else:
+                                self._inV = result
+
+                        future_results.add_done_callback(on_get)
+                    future.set_result(self._inV)
+                future_results.add_done_callback(on_traversal)
+
+        elif isinstance(self._inV, string_types + integer_types):
+            future_results = Vertex.get(self._inV, **kwargs)
+
+            def on_get(f2):
+                try:
+                    result = f2.result()
+                except Exception as e:
+                    future.set_exception(e)
+                else:
+                    self._inV = result
+                    future.set_result(self._inV)
+
+            future_results.add_done_callback(on_get)
+        else:
+            future.set_result(self._inV)
+        return future
 
     def outV(self, *args, **kwargs):
         """
-        Return the vertex that this edge is coming out of.
+        Return the vertex that this edge goes into.
 
         :rtype: Vertex
 
         """
         from goblin.models.vertex import Vertex
+        future = connection.get_future(kwargs)
+        if self._inV is None:
+            future_results = self._simple_traversal('outV', **kwargs)
 
-        if self._outV is None:
-            self._outV = self._simple_traversal('outV', **kwargs)[0]
-        if isinstance(self._outV, string_types + integer_types):
-            self._outV = Vertex.get(self._outV, **kwargs)
-        return self._outV
+            def on_traversal(f):
+                try:
+                    result = f.result()
+                except Exception as e:
+                    future.set_exception(e)
+                else:
+                    self._outV = result[0]
+                    if isinstance(self._outV, string_types + integer_types):
+                        future_results = Vertex.get(self._outV, **kwargs)
+
+                        def on_get(f2):
+                            try:
+                                result = f2.result()
+                            except Exception as e:
+                                future.set_exception(e)
+                            else:
+                                self._outV = result
+
+                        future_results.add_done_callback(on_get)
+                    future.set_result(self._outV)
+                future_results.add_done_callback(on_traversal)
+
+        elif isinstance(self._outV, string_types + integer_types):
+            future_results = Vertex.get(self._outV, **kwargs)
+
+            def on_get(f2):
+                try:
+                    result = f2.result()
+                except Exception as e:
+                    future.set_exception(e)
+                else:
+                    self._outV = result
+                    future.set_result(self._outV)
+
+            future_results.add_done_callback(on_get)
+        else:
+            future.set_result(self._outV)
+        return future
