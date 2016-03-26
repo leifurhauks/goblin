@@ -190,12 +190,9 @@ class Vertex(Element):
         if not isinstance(ids, array_types):
             raise GoblinQueryError("ids must be of type list or tuple")
 
+        deserialize = kwargs.pop('deserialize', True)
         handlers = []
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
-
-        future = future_class()
+        future = connection.get_future(kwargs)
         if len(ids) == 0:
             future_results = connection.execute_query(
                 'g.V.hasLabel(x)', bindings={"x": cls.get_label()}, **kwargs)
@@ -223,11 +220,14 @@ class Vertex(Element):
         def result_handler(results):
             objects = []
             for r in results:
-                try:
-                    objects += [Element.deserialize(r)]
-                except KeyError:  # pragma: no cover
-                    raise GoblinQueryError(
-                        'Vertex type "%s" is unknown' % r.get('label', ''))
+                if deserialize:
+                    try:
+                        objects += [Element.deserialize(r)]
+                    except KeyError:  # pragma: no cover
+                        raise GoblinQueryError(
+                            'Vertex type "%s" is unknown' % r.get('label', ''))
+                else:
+                    objects = results
 
             if as_dict:  # pragma: no cover
                 return {v._id: v for v in objects}
@@ -256,11 +256,7 @@ class Vertex(Element):
 
         """
         reloaded_values = {}
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
-
-        future = future_class()
+        future = connection.get_future(kwargs)
         future_result = connection.execute_query(
             'g.V(vid)', {'vid': self._id}, **kwargs)
 
@@ -304,11 +300,7 @@ class Vertex(Element):
         if not id:
             raise cls.DoesNotExist
         future_results = cls.all([id], **kwargs)
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
-
-        future = future_class()
+        future = connection.get_future(kwargs)
 
         def on_read(f2):
             try:
@@ -353,20 +345,16 @@ class Vertex(Element):
         label = self.get_label()
         # params['element_type'] = self.get_element_type()  don't think we need
         # Here this is a future, have to set handler in callback
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
-
-        future = future_class()
+        future = connection.get_future(kwargs)
         future_result = self._save_vertex(label, params, **kwargs)
-        raw_response = kwargs.pop('raw_response', False)
+        deserialize = kwargs.pop('deserialize', True)
         def on_read(f2):
             try:
                 result = f2.result()
             except Exception as e:
                 future.set_exception(e)
             else:
-                if not raw_response:
+                if deserialize:
                     result = result[0]
                     self._id = result._id
                     for k, v in self._values.items():
@@ -394,11 +382,7 @@ class Vertex(Element):
             raise GoblinQueryError('Cant delete abstract elements')
         if self._id is None:  # pragma: no cover
             return self
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
-
-        future = future_class()
+        future = connection.get_future(kwargs)
         future_result = self._delete_vertex()
 
         def on_read(f2):
@@ -472,11 +456,7 @@ class Vertex(Element):
             end = offset + limit
         else:
             start = end = None
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
-
-        future = future_class()
+        future = connection.get_future(kwargs)
         future_result = self._traversal(operation,
                                         label_strings,
                                         start,
@@ -525,11 +505,7 @@ class Vertex(Element):
                                       "classes, instances, or strings")
             label_strings.append(label_string)
 
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
-
-        future = future_class()
+        future = connection.get_future(kwargs)
         future_result = self._delete_related(operation, label_strings)
 
         def on_read(f2):

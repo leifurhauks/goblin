@@ -214,13 +214,23 @@ def sync_spec():  # pragma: no cover
     pass
 
 
+def get_future(kwargs):
+    future_class = kwargs.get('future_class', None)
+    if future_class is None:
+        future_class = _future
+    if future_class is None:
+        raise GoblinConnectionError(("Please call connection.setup or "
+                                     "pass future_class explicitly"))
+    return future_class()
+
+
 def pop_execute_query_kwargs(keyword_arguments):
     """ pop the optional execute query arguments from arbitrary kwargs;
         return non-None query kwargs in a dict
     """
     query_kwargs = {}
     for key in ('graph_name', 'traversal_source', 'pool',
-                'request_id', 'future_class', 'raw_response'):
+                'request_id', 'future_class'):
         val = keyword_arguments.pop(key, None)
         if val is not None:
             query_kwargs[key] = val
