@@ -110,7 +110,7 @@ Contents:
    websocket_client
    schema_management
    integration
-   modules
+   goblin
 
 .. _`Titan:db`: http://s3.thinkaurelius.com/docs/titan/1.0.0/index.html
 .. _Tinkerpop3: http://tinkerpop.incubator.apache.org/

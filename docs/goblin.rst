@@ -7,11 +7,9 @@ Subpackages
 .. toctree::
 
     goblin.gremlin
-    goblin.metrics
     goblin.models
     goblin.properties
     goblin.relationships
-    goblin.tests
 
 Submodules
 ----------
