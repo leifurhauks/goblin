@@ -20,14 +20,6 @@ goblin.models.element module
     :undoc-members:
     :show-inheritance:
 
-goblin.models.paginated_vertex module
--------------------------------------
-
-.. automodule:: goblin.models.paginated_vertex
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 goblin.models.query module
 --------------------------
 
