@@ -16,15 +16,15 @@ need to evolve into something else - ``goblin`` was born...
 
 Releases
 ========
-The latest release of :py:mod:`goblin` is **0.0.2** *(coming soon)*.
+The latest release of :py:mod:`Goblin<goblin>` is **0.0.2** *(coming soon)*.
 
 Requirements
 ============
 
-:py:mod:`goblin` uses :py:mod:`gremlinclient` to communicate with the
+:py:mod:`Goblin<goblin>` uses :py:mod:`gremlinclient` to communicate with the
 `Gremlin Server`_, and can use  a variety of client/library combinations
 that work with different versions of Python. See the :py:mod:`gremlinclient`
-`docs`_ for more information.
+docs for more information.
 
 `Tornado`_
 
@@ -42,7 +42,7 @@ that work with different versions of Python. See the :py:mod:`gremlinclient`
 
 - Python 2.7
 
-:py:mod:`goblin` aims to provide full support for all `TinkerPop3`_ enabled
+:py:mod:`Goblin<goblin>` aims to provide full support for all `TinkerPop3`_ enabled
 graph databases; however, it is currently only tested against `Titan:db`_ 1.x.
 This project is under active development, and early releases should be considered
 alpha as the API is not yet entirely stable.
@@ -85,6 +85,7 @@ A simple example using the default Tornado client with Python 2.7+::
         followers = yield stream.read()
         return followers
 
+
     connection.setup("ws://localhost:8182")
     loop = IOLoop.current()
     try:
@@ -93,8 +94,11 @@ A simple example using the default Tornado client with Python 2.7+::
       loop.close()
       connection.tear_down()
 
+
 Contributing
 ------------
+:py:mod:`Goblin<goblin>` is under active development on Github, and contributions are welcome.
+More guidelines coming soon....
 
 
 Contents:
@@ -109,7 +113,6 @@ Contents:
    modules
 
 .. _`Titan:db`: http://s3.thinkaurelius.com/docs/titan/1.0.0/index.html
-.. _docs: https://github.com/davebshow/gremlinclient
 .. _Tinkerpop3: http://tinkerpop.incubator.apache.org/
 .. _Gremlin Server: http://tinkerpop.apache.org/docs/3.1.1-incubating/reference/#gremlin-server
 .. _Asyncio: https://docs.python.org/3/library/asyncio.html
@@ -119,6 +122,7 @@ Contents:
 .. _Trollius: http://trollius.readthedocs.org/
 .. _requests-futures: https://pypi.python.org/pypi/requests-futures
 .. _Pulsar: https://pythonhosted.org/pulsar/
+.. _`on Github`: https://github.com/ZEROFAIL/goblin
 
 Indices and tables
 ==================

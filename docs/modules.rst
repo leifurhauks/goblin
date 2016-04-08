@@ -1,5 +1,7 @@
-:py:mod:`Goblin<goblin>` API
-============================
+Goblin API
+==========
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
+
+   goblin
