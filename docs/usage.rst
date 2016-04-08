@@ -3,7 +3,7 @@ Using :py:mod:`Goblin<goblin>`
 
 :py:mod:`Goblin<goblin>` aims to provide an easy to use, intuitive API, without
 sacrificing the flexibility enabled by extensive user configuration. It is designed
-to 'just work' out of the box with most versions of Python (2.7 +) using the
+to 'just work' out of the box with most versions of Python (2.7+) using the
 :py:class:`tornado.ioloop.IOLoop` and :py:class:`tornado.concurrent.Future` class.
 But as the Python community moves forward with projects like :py:mod:`asyncio`,
 :py:mod:`trollius`, :py:mod:`aiohttp` (based on :py:mod:`asyncio`), and `curio`_,
