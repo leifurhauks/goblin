@@ -83,6 +83,22 @@ class TestVertexIO(BaseGoblinTestCase):
             yield tm1.delete()
 
     @gen_test
+    def test_model_save_and_load_with_all(self):
+        """
+        Tests that models can be saved and retrieved
+        """
+        tm0 = yield TestVertexModel.create(test_val=8, name='123456789')
+        tm1 = yield TestVertexModel.create(test_val=9, name='456789')
+        try:
+            stream = yield TestVertexModel.all()
+            tms = yield stream.read()
+            self.assertTrue(tm0 in tms)
+            self.assertTrue(tm1 in tms)
+        finally:
+            yield tm0.delete()
+            yield tm1.delete()
+
+    @gen_test
     def test_model_updating_works_properly(self):
         """
         Tests that subsequent saves after initial model creation work

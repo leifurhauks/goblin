@@ -135,7 +135,7 @@ class Vertex(Element):
     def find_by_value(cls, field, value, as_dict=False):
         """
         Returns vertices that match the given field/value pair.
-
+        ####REVIEW####
         :param field: The field to search
         :type field: str
         :param value: The value of the field
@@ -195,7 +195,7 @@ class Vertex(Element):
         future = connection.get_future(kwargs)
         if len(ids) == 0:
             future_results = connection.execute_query(
-                'g.V.hasLabel(x)', bindings={"x": cls.get_label()}, **kwargs)
+                'g.V().hasLabel(x)', bindings={"x": cls.get_label()}, **kwargs)
 
         else:
             strids = [str(i) for i in ids]
@@ -406,6 +406,7 @@ class Vertex(Element):
         future_result.add_done_callback(on_delete)
         return future
 
+    # This section of the API is under review
     def _simple_traversal(self,
                           operation,
                           labels,
@@ -647,5 +648,5 @@ class Vertex(Element):
         return self._simple_deletion('inV', labels, **kwargs)
 
     def query(self):
-        from goblin.models.query import Query
-        return Query(self)
+        from goblin.models.query import V
+        return V(self)
