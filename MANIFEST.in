@@ -6,5 +6,6 @@ recursive-include goblin/properties *.py
 recursive-include goblin/relationships *.py
 prune goblin/tests
 prune examples
+prune proto
 prune goblin/metrics
-recursive-exclude goblin _compat.py shell.py spec.py tools.py
+recursive-exclude goblin shell.py spec.py
