@@ -188,7 +188,7 @@ async def main():
             daves_out_e[0], daves_out_e[1]))
 
         # Ok, how about some more complex queries?
-        stream = await V(jon).out().in_step().get()
+        stream = await V(jon).out_step().in_step().get()
         jons_coworkers = await stream.read()
         print("These are Jons's coworkers:\n\n{}\n".format(
             jons_coworkers[0]))
@@ -215,12 +215,13 @@ async def main():
 
 
 if __name__ == "__main__":
-    setup("ws://localhost:8182", future=asyncio.Future)
+    setup("ws://localhost:8182", future_class=asyncio.Future)
     AsyncIOMainLoop().install()
     loop = asyncio.get_event_loop()
     loop.run_until_complete(main())
     tear_down()  # maybe this should be teardown
     loop.close()
+
 ```
 
 Shut down Titan:
