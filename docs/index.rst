@@ -16,7 +16,7 @@ need to evolve into something else - ``goblin`` was born...
 
 Releases
 ========
-The latest release of :py:mod:`Goblin<goblin>` is **0.0.2** *(coming soon)*.
+The latest release of :py:mod:`Goblin<goblin>` is |release| *(coming soon)*.
 
 Requirements
 ============
