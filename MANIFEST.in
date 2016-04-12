@@ -1,7 +1,10 @@
-include AUTHORS
-include LICENSE
-include README.rst
-recursive-include goblin *.py *.groovy VERSION
-exclude goblin/tools.py
-exclude goblin/shell.py
-recursive-exclude goblin/metrics *
+include AUTHORS LICENSE README.rst
+recursive-include goblin connection.py constants.py exceptions.py VERSION
+recursive-include goblin/gremlin *.py
+recursive-include goblin/models *.py *.groovy
+recursive-include goblin/properties *.py
+recursive-include goblin/relationships *.py
+prune goblin/tests
+prune examples
+prune goblin/metrics
+recursive-exclude goblin _compat.py shell.py spec.py tools.py
