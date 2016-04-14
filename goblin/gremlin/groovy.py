@@ -20,7 +20,8 @@ class GroovyFunctionParser(object):
     KeywordDef = pyparsing.Keyword('def')
     VarName = pyparsing.Regex(r'[A-Za-z_]\w*')
     FuncName = VarName
-    FuncDefn = KeywordDef + FuncName + "(" + pyparsing.delimitedList(VarName) + ")" + "{"
+    FuncDefn = KeywordDef + FuncName + "(" + pyparsing.Optional(pyparsing.delimitedList(VarName)) + ")" + "{"
+    FuncDefnNoArgs = KeywordDef + FuncName + "(" + ")" + "{"
 
     @classmethod
     def parse(cls, data):

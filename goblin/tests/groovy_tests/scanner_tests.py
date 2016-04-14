@@ -58,6 +58,14 @@ class GroovyScannerTest(BaseGoblinTestCase):
         self.assertEqual(result.body, 'def n = null;\n    for (i in x) {\n n=i; \n}')
         self.assertEqual(result.defn, test_func)
 
+    def test_parsing_example_noargs_function(self):
+        test_func = 'def test_noargs_func() {\n    def n = null;\n    for (i in x) {\n n=i; \n}\n}\n'
+        result = GroovyFunctionParser.parse(test_func)
+        self.assertEqual(result.name, 'test_noargs_func')
+        self.assertListEqual(result.args, [])
+        self.assertEqual(result.body, 'def n = null;\n    for (i in x) {\n n=i; \n}')
+        self.assertEqual(result.defn, test_func)
+
     def test_parsing_example_import(self):
         test_import = 'import com.wellaware.test; //this is sample text'
         result = GroovyImportParser.parse(test_import)
