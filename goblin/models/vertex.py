@@ -220,18 +220,20 @@ class Vertex(Element):
 
         def result_handler(results):
             objects = []
-            for r in results:
-                if deserialize:
-                    try:
-                        objects += [Element.deserialize(r)]
-                    except KeyError:  # pragma: no cover
-                        raise GoblinQueryError(
-                            'Vertex type "%s" is unknown' % r.get('label', ''))
-                else:
-                    objects = results
+            if results:
+                for r in results:
+                    if deserialize:
+                        try:
+                            objects += [Element.deserialize(r)]
+                        except KeyError:  # pragma: no cover
+                            raise GoblinQueryError(
+                                'Vertex type "%s" is unknown' % r.get(
+                                    'label', ''))
+                    else:
+                        objects = results
 
-            if as_dict:  # pragma: no cover
-                return {v._id: v for v in objects}
+                if as_dict:  # pragma: no cover
+                    return {v._id: v for v in objects}
 
             return objects
 
