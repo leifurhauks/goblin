@@ -19,12 +19,13 @@ class VertexMetaClass(ElementMetaClass):
 
     def __new__(mcs, name, bases, body):
         # short circuit element_type inheritance
-        body['label'] = body.pop('label', None)
+        body['_label'] = body.pop('_label', None)
 
         klass = super(VertexMetaClass, mcs).__new__(mcs, name, bases, body)
 
         if not klass.__abstract__:
             label = klass.get_label()
+            body['_label'] = label
             if (label in vertex_types and
                     str(vertex_types[label]) != str(klass)):
                 logger.debug(ElementDefinitionException(
@@ -111,7 +112,7 @@ class Vertex(Element):
     _delete_related = GremlinMethod()
     _find_vertex_by_value = GremlinMethod(classmethod=True)
 
-    label = None
+    _label = None
 
     FACTORY_CLASS = None
 
@@ -170,7 +171,7 @@ class Vertex(Element):
         @returns: str
 
         """
-        return cls._type_name(cls.label)
+        return cls._type_name(cls._label)
 
     @classmethod
     def all(cls, ids=[], as_dict=False, match_length=True, *args, **kwargs):
