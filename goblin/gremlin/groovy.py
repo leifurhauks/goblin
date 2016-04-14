@@ -21,6 +21,7 @@ class GroovyFunctionParser(object):
     VarName = pyparsing.Regex(r'[A-Za-z_]\w*')
     FuncName = VarName
     FuncDefn = KeywordDef + FuncName + "(" + pyparsing.delimitedList(VarName) + ")" + "{"
+    FuncDefnNoArgs = KeywordDef + FuncName + "(" + ")" + "{"
 
     @classmethod
     def parse(cls, data):
@@ -34,7 +35,10 @@ class GroovyFunctionParser(object):
         """
         try:
             # Parse the function here
-            result = cls.FuncDefn.parseString(data)
+            try:
+                result = cls.FuncDefn.parseString(data)
+            except Exception as ex:
+                result = cls.FuncDefnNoArgs.parseString(data)
             result_list = result.asList()
             args = result_list[3:result_list.index(')')]
             # Return single line or multi-line function body
