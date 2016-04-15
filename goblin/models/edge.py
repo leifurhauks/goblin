@@ -175,6 +175,8 @@ class Edge(Element):
                     "ids requested")
 
             objects = []
+            if r is None:
+                results = []
             for r in results:
                 try:
                     objects += [Element.deserialize(r)]
@@ -427,7 +429,8 @@ class Edge(Element):
         future_results = connection.execute_query(
             'g.e(id).%s()' % operation, {'id': self.id},
             handler=edge_traversal_handler, **kwargs)
-        return
+
+        return future_results
 
     def inV(self, *args, **kwargs):
         """
