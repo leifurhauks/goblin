@@ -175,8 +175,6 @@ class Edge(Element):
                     "ids requested")
 
             objects = []
-            if r is None:
-                results = []
             for r in results:
                 try:
                     objects += [Element.deserialize(r)]
