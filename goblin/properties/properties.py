@@ -247,18 +247,9 @@ class DateTime(GraphProperty):
 
 
 class UUID(GraphProperty):
-    """Universally Unique Identifier (UUID) type - UUID4 by default"""
+    """Universally Unique Identifier (UUID) type"""
     data_type = "String"
-    validator = validate_uuid4
-
-    def __init__(self, default=lambda: str(uuid4()), **kwargs):
-        self.uuid_version = kwargs.pop('version', 'uuid4').lower()
-        if self.uuid_version == 'uuid4':
-            self.validator = validate_uuid4
-        elif self.uuid_version == 'uuid1':
-            self.validator = validate_uuid1
-
-        super(UUID, self).__init__(default=default, **kwargs)
+    validator = validate_uuid
 
     def to_python(self, value):
         val = super(UUID, self).to_python(value)

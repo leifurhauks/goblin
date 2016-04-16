@@ -315,5 +315,4 @@ validate_ipv6_ipv4_address = RegexValidator(ipv64_re,
 validate_url = URLValidator()
 
 re_uuid = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
-validate_uuid4 = RegexValidator(re_uuid, 'Enter a valid UUID4.', 'invalid')
-validate_uuid1 = RegexValidator(re_uuid, 'Enter a valid UUID1.', 'invalid')
+validate_uuid = RegexValidator(re_uuid, 'Enter a valid UUID.', 'invalid')

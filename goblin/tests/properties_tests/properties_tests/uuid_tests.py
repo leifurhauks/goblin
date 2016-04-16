@@ -58,7 +58,7 @@ class UUID4VertexTestCase(GraphPropertyBaseClassTestCase):
 
 @attr('unit', 'property', 'property_uuid')
 class UUID1PropertyTestCase(GraphPropertyBaseClassTestCase):
-    klass = UUID(version='uuid1')
+    klass = UUID()
     good_cases = ('bb19eaed-c946-4cef-8001-7cc3357cc439', None)
     if PY2:
         bad_cases = ('val', [], (), {}, 0, long(1), False, 1.1)
@@ -82,7 +82,7 @@ class UUID1PropertyTestCase(GraphPropertyBaseClassTestCase):
 class UUID1TestVertex(Vertex):
     element_type = 'test_uuid1_vertex'
 
-    test_val = UUID(version='uuid1')
+    test_val = UUID()
 
 
 @attr('unit', 'property', 'property_uuid')

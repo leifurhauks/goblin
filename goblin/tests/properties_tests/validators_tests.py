@@ -225,15 +225,10 @@ class IPV6With4ValidatorTestCase(ValidatorBaseClassTestCase):
 
 
 @attr('unit', 'validators')
-class UUID4ValidatorTestCase(ValidatorBaseClassTestCase):
-    klass = validate_uuid4
+class UUIDValidatorTestCase(ValidatorBaseClassTestCase):
+    klass = validate_uuid
     good_cases = ('bb19eaed-c946-4cef-8001-7cc3357cc439', )
     if PY2:
         bad_cases = ('val', [], (), {}, None, 0, long(1), False, 1.1)
     else:
         bad_cases = ('val', [], (), {}, None, 0, False, 1.1)
-
-
-@attr('unit', 'validators')
-class UUID1ValidatorTestCase(UUID4ValidatorTestCase):
-    klass = validate_uuid1
