@@ -8,8 +8,9 @@ from goblin import connection
 from goblin._compat import string_types, print_, add_metaclass
 from goblin.tools import import_string
 from goblin import properties
-from goblin.exceptions import GoblinException, SaveStrategyException, \
-    ModelException, ElementDefinitionException
+from goblin.exceptions import (
+    GoblinException, SaveStrategyException, ModelException,
+    ElementDefinitionException, GoblinQueryError)
 from goblin.gremlin import BaseGremlinMethod
 from goblin import connection
 
@@ -249,6 +250,118 @@ class BaseElement(object):
                 dst_data[name] = dst_data.pop(name)
 
         return dst_data
+
+    @classmethod
+    def get(cls, id, **kwargs):
+        """
+        Look up vertex by its ID. Raises a DoesNotExist exception if a vertex
+        with the given vid was not found. Raises a MultipleObjectsReturned
+        exception if the vid corresponds to more than one vertex in the graph.
+
+        :param id: The ID of the vertex
+        :type id: str
+        :rtype: goblin.models.Vertex
+
+        """
+        if id is None:
+            raise cls.DoesNotExist
+
+        future_results = cls.all([id], **kwargs)
+        future = connection.get_future(kwargs)
+
+        def on_read(f2):
+            try:
+                result = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                result = result[0]
+                if not isinstance(result, cls):
+                    e = cls.WrongElementType(
+                        '%s is not an instance or subclass of %s' % (
+                            result.__class__.__name__, cls.__name__)
+                    )
+                    future.set_exception(e)
+                else:
+                    future.set_result(result)
+
+        def on_get(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
+
+        future_results.add_done_callback(on_get)
+
+        return future
+
+    @classmethod
+    def all(cls, source, ids=None, as_dict=False, **kwargs):
+        """
+        Load all vertices with the given ids from the graph. By default this
+        will return a list of vertices but if as_dict is True then it will
+        return a dictionary containing ids as keys and vertices found as
+        values.
+
+        :param ids: A list of titan ids
+        :type ids: list
+        :param as_dict: Toggle whether to return a dictionary or list
+        :type as_dict: boolean
+        :rtype: dict | list
+
+        """
+
+        if ids is None:
+            ids = []
+
+        deserialize = kwargs.pop('deserialize', True)
+        handlers = []
+        future = connection.get_future(kwargs)
+
+        if ids:
+
+            def id_handler(results):
+                if not results:
+                    raise cls.DoesNotExist
+                if len(results) != len(ids):
+                    raise GoblinQueryError(
+                        "the number of results don't match the number of " +
+                        "ids requested")
+                return results
+
+            handlers.append(id_handler)
+
+        def result_handler(results):
+            if results:
+                if deserialize:
+                    results = [Element.deserialize(r) for r in results]
+                if as_dict:  # pragma: no cover
+                    results = {v._id: v for v in results}
+            else:
+                results = []
+            return results
+
+        handlers.append(result_handler)
+
+        def on_all(f):
+            try:
+                stream = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                [stream.add_handler(h) for h in handlers]
+                future.set_result(stream)
+
+        future_results = connection.execute_query(
+            'g.%s(*eids).hasLabel(x)' % source,
+            bindings={'eids': ids, "x": cls.get_label()}, **kwargs)
+
+        future_results.add_done_callback(on_all)
+
+        return future
 
     @classmethod
     def create(cls, *args, **kwargs):
@@ -558,6 +671,7 @@ class ElementMetaClass(type):
 
 @add_metaclass(ElementMetaClass)
 class Element(BaseElement):
+
     # __metaclass__ = ElementMetaClass
 
     @classmethod

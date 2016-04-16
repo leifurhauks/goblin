@@ -1,13 +1,14 @@
 import logging
 
-
+from goblin import connection
+from goblin.constants import EDGE_TRAVERSAL
 from goblin._compat import (
     array_types, integer_types, float_types, string_types, add_metaclass)
-from goblin import connection
 from goblin.exceptions import (
     ElementDefinitionException, GoblinQueryError, ValidationError)
 from goblin.gremlin import GremlinMethod
 from .element import Element, ElementMetaClass, edge_types
+from .query import V
 
 
 logger = logging.getLogger(__name__)
@@ -148,48 +149,9 @@ class Edge(Element):
         return future
 
     @classmethod
-    def all(cls, ids, as_dict=False, *args, **kwargs):
-        """
-        Load all edges with the given edge_ids from the graph. By default this
-        will return a list of edges but if as_dict is True then it will return
-        a dictionary containing edge_ids as keys and edges found as values.
-
-        :param ids: A list of titan IDs
-        :type ids: list
-        :param as_dict: Toggle whether to return a dictionary or list
-        :type as_dict: boolean
-        :rtype: dict | list
-        """
-        if not isinstance(ids, array_types):
-            raise GoblinQueryError("ids must be of type list or tuple")
-
-        # strids = [str(i) for i in ids]
-        def edge_handler(results):
-            try:
-                results = list(filter(None, results))
-            except TypeError:
-                raise cls.DoesNotExist
-            if len(results) != len(ids):
-                raise GoblinQueryError(
-                    "the number of results don't match the number of edge " +
-                    "ids requested")
-
-            objects = []
-            for r in results:
-                try:
-                    objects += [Element.deserialize(r)]
-                except KeyError:  # pragma: no cover
-                    raise GoblinQueryError('Edge type "%s" is unknown' % '')
-
-            if as_dict:  # pragma: no cover
-                return {e._id: e for e in objects}
-
-            return objects
-
-        return connection.execute_query("g.E(*eids)",
-                                        bindings={'eids': ids},
-                                        handler=edge_handler,
-                                        **kwargs)
+    def all(cls, ids=None, as_dict=False, *args, **kwargs):
+        return super(Edge, cls).all(
+            EDGE_TRAVERSAL, ids=ids, as_dict=as_dict, *args, **kwargs)
 
     @classmethod
     def get_label(cls):
@@ -310,56 +272,6 @@ class Edge(Element):
         return future
 
     @classmethod
-    def get(cls, id, *args, **kwargs):
-        """
-        Look up edge by titan assigned ID. Raises a DoesNotExist exception if
-        an edge with the given edge id was not found. Raises a
-        MultipleObjectsReturned exception if the edge_id corresponds to more
-        than one edge in the graph.
-
-        :param id: The titan assigned ID
-        :type id: str | basestring
-        :rtype: goblin.models.Edge
-        """
-        if not id:
-            raise cls.DoesNotExist
-        future = connection.get_future(kwargs)
-        future_result = cls.all([id], **kwargs)
-
-        def on_read(f2):
-            try:
-                result = f2.result()
-            except Exception as e:
-                future.set_exception(e)
-            else:
-                if len(result) > 1:  # pragma: no cover
-                    # This requires titan to be broken.
-                    e = cls.MultipleObjectsReturned
-                    future.set_exception(e)
-                else:
-                    result = result[0]
-                    if not isinstance(result, cls):
-                        e = cls.WrongElementType(
-                            '%s is not an instance or subclass of %s' % (
-                                result.__class__.__name__, cls.__name__))
-                        future.set_exception(e)
-                    else:
-                        future.set_result(result)
-
-        def on_get(f):
-            try:
-                stream = f.result()
-            except Exception as e:
-                future.set_exception(e)
-            else:
-                future_read = stream.read()
-                future_read.add_done_callback(on_read)
-
-        future_result.add_done_callback(on_get)
-
-        return future
-
-    @classmethod
     def create(cls, outV, inV, label=None, *args, **kwargs):
         """
         Create a new edge of the current type coming out of vertex outV and
@@ -425,7 +337,7 @@ class Edge(Element):
             return data
 
         future_results = connection.execute_query(
-            'g.e(id).%s()' % operation, {'id': self.id},
+            'g.E(id).%s()' % operation, {'id': self.id},
             handler=edge_traversal_handler, **kwargs)
 
         return future_results
@@ -450,7 +362,7 @@ class Edge(Element):
                 else:
                     self._inV = result[0]
                     if isinstance(self._inV, string_types + integer_types):
-                        future_results = Vertex.get(self._inV, **kwargs)
+                        future_results = V(self._inV).get(**kwargs)
 
                         def on_get(f2):
                             try:
@@ -465,7 +377,7 @@ class Edge(Element):
                 future_results.add_done_callback(on_traversal)
 
         elif isinstance(self._inV, string_types + integer_types):
-            future_results = Vertex.get(self._inV, **kwargs)
+            future_results = V(self._inV).get(**kwargs)
 
             def on_get(f2):
                 try:
@@ -501,7 +413,7 @@ class Edge(Element):
                 else:
                     self._outV = result[0]
                     if isinstance(self._outV, string_types + integer_types):
-                        future_results = Vertex.get(self._outV, **kwargs)
+                        future_results = V(self._outV).get(**kwargs)
 
                         def on_get(f2):
                             try:
@@ -516,7 +428,7 @@ class Edge(Element):
                 future_results.add_done_callback(on_traversal)
 
         elif isinstance(self._outV, string_types + integer_types):
-            future_results = Vertex.get(self._outV, **kwargs)
+            future_results = V(self._outV).get(**kwargs)
 
             def on_get(f2):
                 try:

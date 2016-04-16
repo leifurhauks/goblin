@@ -3,6 +3,9 @@ OUT = "out"
 IN = "in"
 BOTH = "both"
 
+VERTEX_TRAVERSAL = "V"
+EDGE_TRAVERSAL = "E"
+
 # Search predicates
 EQUAL = "eq"
 GREATER_THAN = "gt"

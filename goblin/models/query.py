@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 import logging
 
-from goblin._compat import float_types, print_
+from goblin._compat import float_types, print_, integer_types, string_types
 from goblin import connection
 from goblin.exceptions import GoblinQueryError
 from .element import Element
@@ -140,8 +140,23 @@ class V(object):
         pass
 
     def get(self, deserialize=True, *args, **kwargs):
-        script = "g.V(vid).{}".format(self._get())
-        self._bindings.update({"vid": self._vertex._id})
+
+        if isinstance(self._vertex, string_types + integer_types):
+            vid = self._vertex
+        else:
+            vid = self._vertex._id
+        self._bindings.update({"vid": vid})
+
+        steps = self._get()
+        script = "g.V(vid){}".format(steps)
+        if steps:
+            future_results = self._get_stream(script, deserialize)
+        else:
+            future_results = self._get_simple(deserialize)
+
+        return future_results
+
+    def _get_stream(self, script, deserialize, **kwargs):
 
         def process_results(results):
             if not results:
@@ -153,8 +168,37 @@ class V(object):
         future_results = connection.execute_query(
             script, bindings=self._bindings, handler=process_results,
             **kwargs)
-
         return future_results
 
+    def _get_simple(self, deserialize, **kwargs):
+        script = "g.V(vid)"
+        future_results = self._get_stream(script, deserialize, **kwargs)
+        future = connection.get_future(kwargs)
+
+        def on_read(f):
+            try:
+                result = f.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                if not result:
+                    future.set_exception(GoblinQueryError("Does not exist"))
+                future.set_result(result[0])
+
+        def on_stream(f2):
+            try:
+                stream = f2.result()
+            except Exception as e:
+                future.set_exception(e)
+            else:
+                future_read = stream.read()
+                future_read.add_done_callback(on_read)
+
+        future_results.add_done_callback(on_stream)
+        return future
+
     def _get(self):
-        return '.'.join(self._steps)
+        output = ''
+        if self._steps:
+            output = '.{}'.format('.'.join(self._steps))
+        return output

@@ -2,9 +2,10 @@ from __future__ import unicode_literals
 import inspect
 import logging
 
+from goblin import connection
+from goblin.constants import VERTEX_TRAVERSAL
 from goblin._compat import (
     array_types, string_types, add_metaclass, integer_types, float_types)
-from goblin import connection
 from goblin.exceptions import (
     GoblinException, ElementDefinitionException, GoblinQueryError)
 from goblin.gremlin import GremlinMethod
@@ -173,85 +174,6 @@ class Vertex(Element):
         """
         return cls._type_name(cls._label)
 
-    @classmethod
-    def all(cls, ids=[], as_dict=False, match_length=True, *args, **kwargs):
-        """
-        Load all vertices with the given ids from the graph. By default this
-        will return a list of vertices but if as_dict is True then it will
-        return a dictionary containing ids as keys and vertices found as
-        values.
-
-        :param ids: A list of titan ids
-        :type ids: list
-        :param as_dict: Toggle whether to return a dictionary or list
-        :type as_dict: boolean
-        :rtype: dict | list
-
-        """
-        if not isinstance(ids, array_types):
-            raise GoblinQueryError("ids must be of type list or tuple")
-
-        deserialize = kwargs.pop('deserialize', True)
-        handlers = []
-        future = connection.get_future(kwargs)
-        if len(ids) == 0:
-            future_results = connection.execute_query(
-                'g.V().hasLabel(x)', bindings={"x": cls.get_label()}, **kwargs)
-
-        else:
-            strids = [str(i) for i in ids]
-            # Need to test sending complex bindings with client
-            vids = ", ".join(strids)
-            future_results = connection.execute_query(
-                'g.V(%s)' % vids, **kwargs)
-
-            def id_handler(results):
-                try:
-                    results = list(filter(None, results))
-                except TypeError:
-                    raise cls.DoesNotExist
-                if len(results) != len(ids) and match_length:
-                    raise GoblinQueryError(
-                        "the number of results don't match the number of " +
-                        "ids requested")
-                return results
-
-            handlers.append(id_handler)
-
-        def result_handler(results):
-            objects = []
-            if results:
-                for r in results:
-                    if deserialize:
-                        try:
-                            objects += [Element.deserialize(r)]
-                        except KeyError:  # pragma: no cover
-                            raise GoblinQueryError(
-                                'Vertex type "%s" is unknown' % r.get(
-                                    'label', ''))
-                    else:
-                        objects = results
-
-                if as_dict:  # pragma: no cover
-                    return {v._id: v for v in objects}
-
-            return objects
-
-        handlers.append(result_handler)
-
-        def on_all(f):
-            try:
-                stream = f.result()
-            except Exception as e:
-                future.set_exception(e)
-            else:
-                [stream.add_handler(h) for h in handlers]
-                future.set_result(stream)
-
-        future_results.add_done_callback(on_all)
-
-        return future
-
     def _reload_values(self, *args, **kwargs):
         """
         Method for reloading the current vertex by reading its current values
@@ -286,56 +208,6 @@ class Vertex(Element):
                 future_read = stream.read()
                 future_read.add_done_callback(on_read)
         future_result.add_done_callback(on_reload_values)
-        return future
-
-    @classmethod
-    def get(cls, id, *args, **kwargs):
-        """
-        Look up vertex by its ID. Raises a DoesNotExist exception if a vertex
-        with the given vid was not found. Raises a MultipleObjectsReturned
-        exception if the vid corresponds to more than one vertex in the graph.
-
-        :param id: The ID of the vertex
-        :type id: str
-        :rtype: goblin.models.Vertex
-
-        """
-        if not id:
-            raise cls.DoesNotExist
-        future_results = cls.all([id], **kwargs)
-        future = connection.get_future(kwargs)
-
-        def on_read(f2):
-            try:
-                result = f2.result()
-            except Exception as e:
-                future.set_exception(e)
-            else:
-                if len(result) > 1:  # pragma: no cover
-                    # This requires to titan to be broken.
-                    raise cls.MultipleObjectsReturned
-
-                result = result[0]
-                if not isinstance(result, cls):
-                    e = cls.WrongElementType(
-                        '%s is not an instance or subclass of %s' % (
-                            result.__class__.__name__, cls.__name__)
-                    )
-                    future.set_exception(e)
-                else:
-                    future.set_result(result)
-
-        def on_get(f):
-            try:
-                stream = f.result()
-            except Exception as e:
-                future.set_exception(e)
-            else:
-                future_read = stream.read()
-                future_read.add_done_callback(on_read)
-
-        future_results.add_done_callback(on_get)
-
         return future
 
     def save(self, *args, **kwargs):
@@ -408,6 +280,11 @@ class Vertex(Element):
 
         future_result.add_done_callback(on_delete)
         return future
+
+    @classmethod
+    def all(cls, ids=None, as_dict=False, *args, **kwargs):
+        return super(Vertex, cls).all(
+            VERTEX_TRAVERSAL, ids=ids, as_dict=as_dict, *args, **kwargs)
 
     # This section of the API is under review
     def _simple_traversal(self,
