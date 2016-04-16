@@ -27,7 +27,7 @@ before_script:
 
 script:
   - nosetests --with-coverage --cover-package=goblin goblin.tests.test_setup
-  - nosetests --with-coverage --cover-package=goblin goblin.tests.models
+  - nosetests --with-coverage --cover-package=goblin goblin.tests.models_tests
   - nosetests --with-coverage --cover-package=goblin goblin.tests.properties_tests
   - nosetests --with-coverage --cover-package=goblin goblin.tests.relationships_tests
   - nosetests --with-coverage --cover-package=goblin goblin.tests.groovy_tests.method_loading_tests
