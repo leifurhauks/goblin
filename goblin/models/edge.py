@@ -19,7 +19,7 @@ class EdgeMetaClass(ElementMetaClass):
 
     def __new__(mcs, name, bases, body):
         # short circuit element_type inheritance
-        body['label'] = body.pop('label', None)
+        body['_label'] = body.pop('_label', None)
 
         klass = super(EdgeMetaClass, mcs).__new__(mcs, name, bases, body)
 
@@ -36,7 +36,7 @@ class EdgeMetaClass(ElementMetaClass):
                            bases: %s
                            body: %s""" % (label, mcs, name, bases, body)))
             else:
-                edge_types[klass.get_label()] = klass
+                edge_types[label] = klass
         return klass
 
 
@@ -51,7 +51,7 @@ class Edge(Element):
     # be created between two vertices
     __exclusive__ = False
 
-    label = None
+    _label = None
 
     gremlin_path = 'edge.groovy'
 
@@ -161,7 +161,7 @@ class Edge(Element):
         :rtype: str
 
         """
-        return cls._type_name(cls.label)
+        return cls._type_name(cls._label)
 
     @classmethod
     def get_between(cls, outV, inV, page_num=None, per_page=None):

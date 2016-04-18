@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import logging
 import re
 import warnings
+import inflection
 from collections import OrderedDict
 
 from goblin import connection
@@ -119,7 +120,22 @@ class BaseElement(object):
         return not self.__eq__(other)  # pragma: no cover
 
     @classmethod
-    def _type_name(cls, manual_name):
+    def format_type_name(cls, type_name):
+        """
+        Specifies the format that should be used to format the type_name
+
+        By default it will force lower case snake_case formatting. It may
+        be overriden in a derived class
+
+        :param type_name: The name to format
+        :type type_name: str
+        :rtype: str
+        """
+        return inflection.underscore(type_name).lower()
+
+
+    @classmethod
+    def _type_name(cls, manual_name=None):
         """
         Returns the element name if it has been defined, otherwise it creates
         it from the module and class name.
@@ -129,16 +145,8 @@ class BaseElement(object):
         :rtype: str
 
         """
-        pf_name = ''
-        if manual_name:
-            pf_name = manual_name.lower()
-        else:
-            camelcase = re.compile(r'([a-z])([A-Z])')
-            ccase = lambda s: camelcase.sub(lambda v: '{}_{}'.format(
-                v.group(1), v.group(2).lower()), s)
-
-            pf_name += ccase(cls.__name__)
-            pf_name = pf_name.lower()
+        pf_name = manual_name if manual_name else cls.__name__
+        pf_name = cls.format_type_name(pf_name)
         return pf_name.lstrip('_')
 
     def validate_field(self, field_name, val):

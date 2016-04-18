@@ -15,7 +15,8 @@ develop_requires = ['Sphinx==1.3.5',
                     'sphinx-rtd-theme==0.1.9',
                     'tox==2.3.1',
                     'Twisted==15.5.0',
-                    'watchdog==0.8.3']
+                    'watchdog==0.8.3',
+                    'inflection==0.3.1']
 
 long_desc = """
 Object-Graph Mapper (OGM) for the TinkerPop 3 Gremlin Server
@@ -61,6 +62,7 @@ setup(
                       'pytz>=2015.7',
                       'gremlinclient>=0.2.6',
                       'six>=1.10.0',
+                      'inflection==0.3.1',
                       'factory-boy>=2.6.0'],
     extras_require={
         'develop': develop_requires,
