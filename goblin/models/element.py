@@ -119,7 +119,7 @@ class BaseElement(object):
         return not self.__eq__(other)  # pragma: no cover
 
     @classmethod
-    def _type_name_formatter(cls, type_name):
+    def format_type_name(cls, type_name):
         """
         Specifies the format that should be used to format the type_name
 
@@ -145,7 +145,7 @@ class BaseElement(object):
 
         """
         pf_name = manual_name if manual_name else cls.__name__
-        pf_name = cls._type_name_formatter(pf_name)
+        pf_name = cls.format_type_name(pf_name)
         return pf_name.lstrip('_')
 
     def validate_field(self, field_name, val):
