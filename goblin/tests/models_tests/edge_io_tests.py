@@ -285,3 +285,20 @@ class TestEdgeIO(BaseGoblinTestCase):
             yield e1.delete()
             yield v1.delete()
             yield v2.delete()
+
+    @gen_test
+    def test___eq__operator(self):
+        v1 = yield TestVertexModel.create(test_val=8, name='a')
+        v2 = yield TestVertexModel.create(test_val=7, name='b')
+        e1 = yield TestEdgeModel.create(v1, v2, test_val=-99, name='e1')
+
+        try:
+            stream = yield TestEdgeModel.find_by_value('test_val', -99)
+            results = yield stream.read()
+            self.assertEqual(len(results), 1)
+            e2 = results[0]
+            self.assertEqual(e1, e2)
+        finally:
+            yield e1.delete()
+            yield v1.delete()
+            yield v2.delete()

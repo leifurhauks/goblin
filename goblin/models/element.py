@@ -534,6 +534,9 @@ class BaseElement(object):
                 set(self._manual_values.keys())):
             yield item
 
+    def __eq__(self, other):
+        return self.id == other.id
+
     def items(self):
         items = []
         for key in self._properties.keys():

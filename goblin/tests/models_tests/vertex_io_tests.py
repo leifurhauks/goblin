@@ -798,3 +798,16 @@ class TestVertexTraversal(BaseGoblinTestCase):
                 print_("Got value: {}".format(value))
         finally:
             yield v.delete()
+
+    @gen_test
+    def test___eq__operator(self):
+        v1 = yield TestVertexModel.create(test_val=8, name='a')
+
+        try:
+            stream = yield TestVertexModel.find_by_value('test_val', 8)
+            results = yield stream.read()
+            self.assertEqual(len(results), 1)
+            v2 = results[0]
+            self.assertEqual(v1, v2)
+        finally:
+            yield v1.delete()
