@@ -12,22 +12,50 @@ def get_existing_indices():
     return vertex_indices, edge_indices
 
 
-def make_property_key(name, data_type, cardinality, graph_name=None):
+def make_property_key(name, data_type, cardinality, graph_name=None, **kwargs):
     graph_name = graph_name or connection._graph_name or "graph"
     script = """\
         try {
-            mgmt = graph.openManagement();
-            name = mgmt.makePropertyKey('%s').dataType(%s.class)
-            name.cardinality(Cardinality.%s).make()
-            mgmt.commit()
+            mgmt = graph.openManagement()
+            if (!mgmt.containsRelationType('%s')) {
+                name = mgmt.makePropertyKey('%s').dataType(%s.class)
+                name.cardinality(Cardinality.%s).make()
+                mgmt.commit()
+            }
         } catch (err) {
             graph.tx().rollback()
             throw(err)
-        }""" % (name, data_type, cardinality)
-    return connection.execute_query(script, graph_name=graph_name)
+        }""" % (name, name, data_type, cardinality)
+    return _property_handler(script, graph_name, **kwargs)
 
 
-def get_property_key(name, graph_name=None):
+def _property_handler(script, graph_name, **kwargs):
+    future = connection.get_future(kwargs)
+    future_response = connection.execute_query(script, graph_name=graph_name)
+
+    def on_read(f2):
+        try:
+            result = f2.result()
+        except Exception as e:
+            future.set_exception(e)
+        else:
+            future.set_result(result)
+
+    def on_key(f):
+        try:
+            stream = f.result()
+        except Exception as e:
+            future.set_exception(e)
+        else:
+            future_read = stream.read()
+            future_read.add_done_callback(on_read)
+
+    future_response.add_done_callback(on_key)
+    return future
+
+
+
+def get_property_key(name, graph_name=None, **kwargs):
     graph_name = graph_name or connection._graph_name or "graph"
     script = """
         try {
@@ -38,11 +66,11 @@ def get_property_key(name, graph_name=None):
             graph.tx().rollback()
             throw(error)
         } """ % (name)
-    # This returns a vertex...
-    return connection.execute_query(script, graph_name=graph_name)
+    # This returns a vertex...?
+    return _property_handler(script, graph_name, **kwargs)
 
 
-def change_property_key_name(old_name, new_name, graph_name=None):
+def change_property_key_name(old_name, new_name, graph_name=None, **kwargs):
     script = """
         try {
             mgmt = graph.openManagement()
@@ -53,7 +81,7 @@ def change_property_key_name(old_name, new_name, graph_name=None):
             graph.tx().rollback()
             throw(err)
         }""" % (old_name, new_name)
-    return connection.execute_query(script, graph_name=graph_name)
+    return _property_handler(script, graph_name, **kwargs)
 
 
 def write_diff_indices_to_file(filename, spec=None):  # pragma: no cover

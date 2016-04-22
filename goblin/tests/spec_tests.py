@@ -84,21 +84,16 @@ class TestSpecSystem(BaseGoblinTestCase):
 
     @gen_test
     def test_make_get_change_property_key(self):
-        stream = yield make_property_key('test107', 'String', 'SINGLE')
-        resp = yield stream.read()
+        resp = yield make_property_key('test111', 'String', 'SINGLE')
         self.assertIsNone(resp.data[0])
-        stream = yield get_property_key('test107')
-        resp = yield stream.read()
+        resp = yield get_property_key('test111')
         self.assertIsNotNone(resp.data[0])
-        stream = yield change_property_key_name('test107', 'test108')
-        resp = yield stream.read()
+        resp = yield change_property_key_name('test111', 'test112')
         self.assertIsNone(resp.data[0])
-        stream = yield get_property_key('test107')
-        resp = yield stream.read()
+        resp = yield get_property_key('test111')
         self.assertIsNone(resp.data[0])
 
     @gen_test
     def test_get_property_key_doesnt_exist(self):
-        stream = yield get_property_key('test1000')
-        resp = yield stream.read()
+        resp = yield get_property_key('test1000')
         self.assertIsNone(resp.data[0])
