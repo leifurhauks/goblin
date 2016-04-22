@@ -87,10 +87,6 @@ class BaseElement(object):
         return self._label
 
     @property
-    def manual_values(self):
-        return self._manual_values
-
-    @property
     def id(self):
         return self._id
 
