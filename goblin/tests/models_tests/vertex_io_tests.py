@@ -395,6 +395,20 @@ class TestUpdateMethod(BaseGoblinTestCase):
     @gen_test
     def test_manual_values_update(self):
         """ Tests that the update method works as expected """
+        tm = yield TestVertexModel.create(
+            test_val=8, name='Tucker', handle='nightrider')
+        try:
+            self.assertEqual(tm['handle'], 'nightrider')
+            tm2 = yield tm.update(manual_values={'handle': 'dusktreader'})
+            tm3 = yield TestVertexModel.get(tm.id)
+            self.assertEqual(tm2['handle'], 'dusktreader')
+            self.assertEqual(tm3['handle'], 'dusktreader')
+        finally:
+            yield tm.delete()
+
+    @gen_test
+    def test_manual_values_new_prop_update(self):
+        """ Tests that the update method works as expected """
         tm = yield TestVertexModel.create(test_val=8, name='Tucker')
         try:
             tm2 = yield tm.update(manual_values={'handle': 'dusktreader'})
