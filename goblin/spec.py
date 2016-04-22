@@ -29,32 +29,6 @@ def make_property_key(name, data_type, cardinality, graph_name=None, **kwargs):
     return _property_handler(script, graph_name, **kwargs)
 
 
-def _property_handler(script, graph_name, **kwargs):
-    future = connection.get_future(kwargs)
-    future_response = connection.execute_query(script, graph_name=graph_name)
-
-    def on_read(f2):
-        try:
-            result = f2.result()
-        except Exception as e:
-            future.set_exception(e)
-        else:
-            future.set_result(result)
-
-    def on_key(f):
-        try:
-            stream = f.result()
-        except Exception as e:
-            future.set_exception(e)
-        else:
-            future_read = stream.read()
-            future_read.add_done_callback(on_read)
-
-    future_response.add_done_callback(on_key)
-    return future
-
-
-
 def get_property_key(name, graph_name=None, **kwargs):
     graph_name = graph_name or connection._graph_name or "graph"
     script = """
@@ -82,6 +56,31 @@ def change_property_key_name(old_name, new_name, graph_name=None, **kwargs):
             throw(err)
         }""" % (old_name, new_name)
     return _property_handler(script, graph_name, **kwargs)
+
+
+def _property_handler(script, graph_name, **kwargs):
+    future = connection.get_future(kwargs)
+    future_response = connection.execute_query(script, graph_name=graph_name)
+
+    def on_read(f2):
+        try:
+            result = f2.result()
+        except Exception as e:
+            future.set_exception(e)
+        else:
+            future.set_result(result)
+
+    def on_key(f):
+        try:
+            stream = f.result()
+        except Exception as e:
+            future.set_exception(e)
+        else:
+            future_read = stream.read()
+            future_read.add_done_callback(on_read)
+
+    future_response.add_done_callback(on_key)
+    return future
 
 
 def write_diff_indices_to_file(filename, spec=None):  # pragma: no cover
