@@ -94,30 +94,6 @@ class BaseElement(object):
     def id(self, id):
         self._id = id
 
-    def __eq__(self, other):
-        """
-        Check for equality between two elements.
-
-        :param other: Element to be compared to
-        :type other: BaseElement
-        :rtype: boolean
-
-        """
-        if not isinstance(other, BaseElement):  # pragma: no cover
-            return False
-        return self.as_dict() == other.as_dict()
-
-    def __ne__(self, other):
-        """
-        Check for inequality between two elements.
-
-        :param other: Element to be compared to
-        :type other: BaseElement
-        :rtype: boolean
-
-        """
-        return not self.__eq__(other)  # pragma: no cover
-
     @classmethod
     def format_type_name(cls, type_name):
         """
@@ -535,6 +511,18 @@ class BaseElement(object):
             yield item
 
     def __eq__(self, other):
+        """
+        Check for equality between two elements.
+
+        :param other: Element to be compared to
+        :type other: BaseElement
+        :rtype: boolean
+
+        """
+        if self.__class__ != other.__class__:
+            return False
+        if self.id is None:
+            return self is other
         return self.id == other.id
 
     def items(self):
