@@ -1,9 +1,18 @@
 from __future__ import unicode_literals
+from tornado import gen
 from goblin.tests import BaseGoblinTestCase
 from goblin.properties import GraphProperty
 from nose.plugins.attrib import attr
 from goblin.exceptions import ValidationError
 from goblin._compat import print_
+from goblin.spec import get_property_key, make_property_key
+
+
+@gen.coroutine
+def create_key(key, data_type):
+    resp = yield get_property_key(key)
+    if resp.data[0] is None:
+        yield make_property_key(key, data_type, 'SINGLE')
 
 
 @attr('unit', 'property')

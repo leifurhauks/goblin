@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
-
 from tornado.testing import gen_test
+from goblin import connection
 from goblin.tests import BaseGoblinTestCase
-from .base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase, create_key
 from goblin.properties.properties import String, Text, GraphProperty
 from goblin.models import Vertex
 from goblin.exceptions import ValidationError
@@ -45,7 +45,23 @@ class StringTestChoicesVertex(Vertex):
 class StringVertexTestCase(GraphPropertyBaseClassTestCase):
 
     @gen_test
+    def test_manual_schema(self):
+        key = StringTestVertex.get_property_by_name('test_val')
+        label = StringTestVertex.get_label()
+        yield create_key(key, 'String')
+        stream = yield connection.execute_query(
+            "graph.addVertex(label, l0, k0, v0)",
+            bindings={'l0': label, 'k0': key, 'v0': 'hello'})
+        resp = yield stream.read()
+        self.assertEqual(
+            resp.data[0]['properties'][key][0]['value'], 'hello')
+
+    # titan converts pretty much anythin to string
+
+    @gen_test
     def test_string_io(self):
+        key = StringTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'String')
         print_("creating vertex")
         dt = yield StringTestVertex.create(test_val='test')
         print_("getting vertex from vertex: %s" % dt)
@@ -81,6 +97,8 @@ class TextVertexTestCase(GraphPropertyBaseClassTestCase):
     @gen_test
     def test_text_io(self):
         print_("creating vertex")
+        key = TextTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'String')
         dt = yield TextTestVertex.create(test_val='ab12')
         print_("getting vertex from vertex: %s" % dt)
         dt2 = yield TextTestVertex.get(dt._id)
@@ -103,6 +121,8 @@ class TestVertexChoicesTestCase(BaseGoblinTestCase):
 
     @gen_test
     def test_good_choices_value_io(self):
+        key = StringTestChoicesVertex.get_property_by_name('test_val')
+        yield create_key(key, 'String')
         print_("creating vertex")
         dt = yield StringTestChoicesVertex.create(test_val=1)
         print_("validating input")
@@ -112,6 +132,8 @@ class TestVertexChoicesTestCase(BaseGoblinTestCase):
 
     @gen_test
     def test_good_choices_key_io(self):
+        key = StringTestChoicesVertex.get_property_by_name('test_val')
+        yield create_key(key, 'String')
         print_("creating vertex")
         dt = yield StringTestChoicesVertex.create(test_val='B')
         print_("validating input")

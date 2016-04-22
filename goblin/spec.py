@@ -14,14 +14,12 @@ def get_existing_indices():
 
 def make_property_key(name, data_type, cardinality, graph_name=None, **kwargs):
     graph_name = graph_name or connection._graph_name or "graph"
-    script = """\
+    script = """
         try {
             mgmt = graph.openManagement()
-            if (!mgmt.containsRelationType('%s')) {
-                name = mgmt.makePropertyKey('%s').dataType(%s.class)
-                name.cardinality(Cardinality.%s).make()
-                mgmt.commit()
-            }
+            name = mgmt.makePropertyKey('%s').dataType(%s.class)
+            name.cardinality(Cardinality.%s).make()
+            mgmt.commit()
         } catch (err) {
             graph.tx().rollback()
             throw(err)

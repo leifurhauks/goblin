@@ -1,9 +1,9 @@
 from __future__ import unicode_literals
 from nose.plugins.attrib import attr
-
 from tornado.testing import gen_test
 from goblin.tests import BaseGoblinTestCase
-from .base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase, create_key
+from goblin import connection
 from goblin.properties.properties import Boolean, GraphProperty
 from goblin.models import Vertex
 from goblin.exceptions import ValidationError
@@ -30,7 +30,6 @@ CHOICES = (
 
 class BooleanTestChoicesVertex(Vertex):
     element_type = 'test_boolean_choices_vertex'
-
     test_val = Boolean(choices=CHOICES)
 
 
@@ -38,7 +37,32 @@ class BooleanTestChoicesVertex(Vertex):
 class BooleanVertexTestCase(GraphPropertyBaseClassTestCase):
 
     @gen_test
+    def test_manual_schema(self):
+        key = BooleanTestVertex.get_property_by_name('test_val')
+        label = BooleanTestVertex.get_label()
+        yield create_key(key, 'Boolean')
+        stream = yield connection.execute_query(
+            "graph.addVertex(label, l0, k0, v0)",
+            bindings={'l0': label, 'k0': key, 'v0': True})
+        resp = yield stream.read()
+        self.assertEqual(
+            resp.data[0]['properties'][key][0]['value'], True)
+
+    @gen_test
+    def test_violate_manual_schema(self):
+        key = BooleanTestVertex.get_property_by_name('test_val')
+        label = BooleanTestVertex.get_label()
+        yield create_key(key, 'Boolean')
+        with self.assertRaises(RuntimeError):
+            stream = yield connection.execute_query(
+                "graph.addVertex(label, l0, k0, v0)",
+                bindings={'l0': label, 'k0': key, 'v0': 21})
+            resp = yield stream.read()
+
+    @gen_test
     def test_boolean_io(self):
+        key = BooleanTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Boolean')
         print_("creating vertex")
         dt = yield BooleanTestVertex.create(test_val=True)
         print_("getting vertex from vertex: %s" % dt)
@@ -62,6 +86,8 @@ class TestVertexChoicesTestCase(BaseGoblinTestCase):
 
     @gen_test
     def test_good_choices_value_io(self):
+        key = BooleanTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Boolean')
         print_("creating vertex")
         dt = yield BooleanTestChoicesVertex.create(test_val=True)
         print_("validating input")
@@ -71,6 +97,8 @@ class TestVertexChoicesTestCase(BaseGoblinTestCase):
 
     @gen_test
     def test_good_choices_key_io(self):
+        key = BooleanTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Boolean')
         print_("creating vertex")
         dt = yield BooleanTestChoicesVertex.create(test_val=False)
         print_("validating input")
