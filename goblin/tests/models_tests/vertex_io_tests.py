@@ -16,7 +16,7 @@ from goblin.models import Edge, Vertex
 from goblin.models.vertex import EnumVertexBaseMeta
 from goblin import properties
 from goblin._compat import with_metaclass
-from goblin.exceptions import GoblinQueryError
+from goblin.exceptions import GoblinQueryError, ModelException
 
 
 class TestVertexModel2(Vertex):
@@ -328,20 +328,20 @@ class TestNestedDeserialization(BaseGoblinTestCase):
             self.assertEqual(nested[4], 5)
         finally:
             yield original.delete()
-
-
-class TestEnumVertexModel(with_metaclass(EnumVertexBaseMeta, Vertex)):
-    __enum_id_only__ = False
-    name = properties.String(default='test text')
-    test_val = properties.Integer(default=0)
-
-    def enum_generator(self):
-        return '%s_%s' % (self.name.replace(' ', '_').upper(), self.test_val)
-
-
-class TestEnumVertexModel2(with_metaclass(EnumVertexBaseMeta, Vertex)):
-    name = properties.String(default='test text')
-    test_val = properties.Integer(default=0)
+#
+#
+# class TestEnumVertexModel(with_metaclass(EnumVertexBaseMeta, Vertex)):
+#     __enum_id_only__ = False
+#     name = properties.String(default='test text')
+#     test_val = properties.Integer(default=0)
+#
+#     def enum_generator(self):
+#         return '%s_%s' % (self.name.replace(' ', '_').upper(), self.test_val)
+#
+#
+# class TestEnumVertexModel2(with_metaclass(EnumVertexBaseMeta, Vertex)):
+#     name = properties.String(default='test text')
+#     test_val = properties.Integer(default=0)
 
 
 # Enum has not been implemented
@@ -389,6 +389,28 @@ class TestUpdateMethod(BaseGoblinTestCase):
             tm3 = yield TestVertexModel.get(tm.id)
             self.assertEqual(tm2.test_val, 9)
             self.assertEqual(tm3.test_val, 9)
+        finally:
+            yield tm.delete()
+
+    @gen_test
+    def test_manual_values_update(self):
+        """ Tests that the update method works as expected """
+        tm = yield TestVertexModel.create(test_val=8, name='Tucker')
+        try:
+            tm2 = yield tm.update(manual_values={'handle': 'dusktreader'})
+            tm3 = yield TestVertexModel.get(tm.id)
+            self.assertEqual(tm2['handle'], 'dusktreader')
+            self.assertEqual(tm3['handle'], 'dusktreader')
+        finally:
+            yield tm.delete()
+
+    @gen_test
+    def test_manual_values_already_exists_error(self):
+        """ Tests that the update method works as expected """
+        tm = yield TestVertexModel.create(test_val=8, name='Tucker')
+        try:
+            with self.assertRaises(ModelException):
+                tm2 = yield tm.update(manual_values={'name': 'dusktreader'})
         finally:
             yield tm.delete()
 

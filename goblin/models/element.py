@@ -13,7 +13,7 @@ from goblin.exceptions import (
     GoblinException, SaveStrategyException, ModelException,
     ElementDefinitionException, GoblinQueryError)
 from goblin.gremlin import BaseGremlinMethod
-from goblin import connection
+from goblin.properties.base import BaseValueManager
 
 
 logger = logging.getLogger(__name__)
@@ -76,7 +76,6 @@ class BaseElement(object):
             setattr(self, name, value)
 
         # unknown properties that are loaded manually
-        from goblin.properties.base import BaseValueManager
         for kwarg in set(values.keys()).difference(
                 set(self._properties.keys())):  # set(self._properties.keys()) - set(values.keys()):
             if kwarg not in ('id', 'inV', 'outV', 'label'):
@@ -86,6 +85,10 @@ class BaseElement(object):
     @property
     def label(self):
         return self._label
+
+    @property
+    def manual_values(self):
+        return self._manual_values
 
     @property
     def id(self):
@@ -393,7 +396,10 @@ class BaseElement(object):
 
     def pre_update(self, **values):
         """ Override this to perform pre-update validation """
-        pass
+        for key in values.keys():
+            if key not in self._properties:
+                raise TypeError(
+                    "unrecognized attribute name: '{}'".format(key))
 
     def update(self, **values):
         """
@@ -402,11 +408,16 @@ class BaseElement(object):
         """
         if self.__abstract__:
             raise GoblinException('cant update abstract elements')
+        manual_values = values.pop('manual_values', None)
+
+        if manual_values is not None:
+            for k, v in manual_values.items():
+                if k in self._properties:
+                    raise ModelException("Cannot manually add property that "
+                                         "already exists")
+                self._manual_values[k] = BaseValueManager(None, v)
+
         self.pre_update(**values)
-        for key in values.keys():
-            if key not in self._properties:
-                raise TypeError(
-                    "unrecognized attribute name: '{}'".format(key))
 
         for k, v in values.items():
             setattr(self, k, v)

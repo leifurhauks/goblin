@@ -82,9 +82,10 @@ class Edge(Element):
         super(Edge, self).__init__(**values)
 
     def __repr__(self):
-        return "{}(label={}, id={}, values={})".format(
+        return "{}(label={}, id={}, values={}, manual_values={})".format(
             self.__class__.__name__, self.__class__.get_label(),
-            getattr(self, '_id', None), getattr(self, '_values', {}))
+            getattr(self, '_id', None), getattr(self, '_values', {}),
+            getattr(self, '_manual_values', {}))
 
     def __getstate__(self):
         state = {u'_id': self.id,
