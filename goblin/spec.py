@@ -12,6 +12,50 @@ def get_existing_indices():
     return vertex_indices, edge_indices
 
 
+def make_property_key(name, data_type, cardinality, graph_name=None):
+    graph_name = graph_name or connection._graph_name or "graph"
+    script = """\
+        try {
+            mgmt = graph.openManagement();
+            name = mgmt.makePropertyKey('%s').dataType(%s.class)
+            name.cardinality(Cardinality.%s).make()
+            mgmt.commit()
+        } catch (err) {
+            graph.tx().rollback()
+            throw(err)
+        }""" % (name, data_type, cardinality)
+    return connection.execute_query(script, graph_name=graph_name)
+
+
+def get_property_key(name, graph_name=None):
+    graph_name = graph_name or connection._graph_name or "graph"
+    script = """
+        try {
+            mgmt = graph.openManagement()
+            prop = mgmt.getPropertyKey('%s')
+            return prop
+        } catch (err) {
+            graph.tx().rollback()
+            throw(error)
+        } """ % (name)
+    # This returns a vertex...
+    return connection.execute_query(script, graph_name=graph_name)
+
+
+def change_property_key_name(old_name, new_name, graph_name=None):
+    script = """
+        try {
+            mgmt = graph.openManagement()
+            prop = mgmt.getPropertyKey('%s')
+            mgmt.changeName(prop, '%s')
+            mgmt.commit()
+        } catch (err) {
+            graph.tx().rollback()
+            throw(err)
+        }""" % (old_name, new_name)
+    return connection.execute_query(script, graph_name=graph_name)
+
+
 def write_diff_indices_to_file(filename, spec=None):  # pragma: no cover
     """ Preview of index diff specification to write to file
 
