@@ -83,16 +83,17 @@ A simple example using the default Tornado client with Python 2.7+::
         # Find Gremlin's followers
         stream = yield V(gremlin).in_step().get()  # `in` is a reserved word
         followers = yield stream.read()
-        return followers
+        raise gen.Return(followers)  # or just return for Python 3
 
 
     connection.setup("ws://localhost:8182")
     loop = IOLoop.current()
     try:
-      followers = loop.run_sync(go)
+        followers = loop.run_sync(go)
     finally:
-      loop.close()
-      connection.tear_down()
+        connection.tear_down()
+        loop.close()
+
 
 
 Contributing
