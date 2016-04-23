@@ -23,7 +23,7 @@ def make_property_key(name, data_type, cardinality, graph_name=None, **kwargs):
         } catch (err) {
             graph.tx().rollback()
             throw(err)
-        }""" % (name, name, data_type, cardinality)
+        }""" % (name, data_type, cardinality)
     return _property_handler(script, graph_name, **kwargs)
 
 
