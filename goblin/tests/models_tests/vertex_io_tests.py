@@ -328,120 +328,120 @@ class TestNestedDeserialization(BaseGoblinTestCase):
             self.assertEqual(nested[4], 5)
         finally:
             yield original.delete()
+# #
+# #
+# # class TestEnumVertexModel(with_metaclass(EnumVertexBaseMeta, Vertex)):
+# #     __enum_id_only__ = False
+# #     name = properties.String(default='test text')
+# #     test_val = properties.Integer(default=0)
+# #
+# #     def enum_generator(self):
+# #         return '%s_%s' % (self.name.replace(' ', '_').upper(), self.test_val)
+# #
+# #
+# # class TestEnumVertexModel2(with_metaclass(EnumVertexBaseMeta, Vertex)):
+# #     name = properties.String(default='test text')
+# #     test_val = properties.Integer(default=0)
 #
 #
-# class TestEnumVertexModel(with_metaclass(EnumVertexBaseMeta, Vertex)):
-#     __enum_id_only__ = False
-#     name = properties.String(default='test text')
-#     test_val = properties.Integer(default=0)
+# # Enum has not been implemented
+# # @attr('unit', 'vertex_io', 'vertex_enum')
+# # class TestVertexEnumModel(BaseGoblinTestCase):
+# #
+# #     @gen_test
+# #     def test_default_enum_handling(self):
+# #         """ Default enum handling test
+# #
+# #         Works by grabbing the `name` property and substituting ' ' for '_' and capitalizing
+# #         The enum returns the Vertex ID
+# #         """
+# #         tv = yield TestEnumVertexModel2.create()
+# #         txt = yield TestEnumVertexModel2.TEST_TEXT
+# #         self.assertEqual(txt, tv.id)
+# #         yield tv.delete()
+# #
+# #     def test_custom_enum_handling(self):
+# #         """ Custom enum handling test
+# #
+# #         Works utilizing the VertexModel's `enum_generator` instance method to generate the ENUMs
+# #         The enum returns the actual Vertex instance because the `__enum_id_only__` was set to False
+# #         which stores the entire Vertex instead of just the ID.
+# #         """
+# #         tv = TestEnumVertexModel.create()
+# #         self.assertEqual(TestEnumVertexModel.TEST_TEXT_0, tv)
+# #         tv.delete()
+# #
+# #     def test_attempt_load_fail(self):
+# #         with self.assertRaises(AttributeError):
+# #             TestEnumVertexModel.WRONG
 #
-#     def enum_generator(self):
-#         return '%s_%s' % (self.name.replace(' ', '_').upper(), self.test_val)
 #
-#
-# class TestEnumVertexModel2(with_metaclass(EnumVertexBaseMeta, Vertex)):
-#     name = properties.String(default='test text')
-#     test_val = properties.Integer(default=0)
-
-
-# Enum has not been implemented
-# @attr('unit', 'vertex_io', 'vertex_enum')
-# class TestVertexEnumModel(BaseGoblinTestCase):
+# @attr('unit', 'vertex_io')
+# class TestUpdateMethod(BaseGoblinTestCase):
 #
 #     @gen_test
-#     def test_default_enum_handling(self):
-#         """ Default enum handling test
+#     def test_success_case(self):
+#         """ Tests that the update method works as expected """
+#         tm = yield TestVertexModel.create(test_val=8, name='123456789')
+#         try:
+#             tm2 = yield tm.update(test_val=9)
 #
-#         Works by grabbing the `name` property and substituting ' ' for '_' and capitalizing
-#         The enum returns the Vertex ID
+#             tm3 = yield TestVertexModel.get(tm.id)
+#             self.assertEqual(tm2.test_val, 9)
+#             self.assertEqual(tm3.test_val, 9)
+#         finally:
+#             yield tm.delete()
+#
+#     @gen_test
+#     def test_manual_values_update(self):
+#         """ Tests that the update method works as expected """
+#         tm = yield TestVertexModel.create(
+#             test_val=8, name='Tucker', handle='nightrider')
+#         try:
+#             self.assertEqual(tm['handle'], 'nightrider')
+#             tm2 = yield tm.update(manual_values={'handle': 'dusktreader'})
+#             tm3 = yield TestVertexModel.get(tm.id)
+#             self.assertEqual(tm2['handle'], 'dusktreader')
+#             self.assertEqual(tm3['handle'], 'dusktreader')
+#         finally:
+#             yield tm.delete()
+#
+#     @gen_test
+#     def test_manual_values_new_prop_update(self):
+#         """ Tests that the update method works as expected """
+#         tm = yield TestVertexModel.create(test_val=8, name='Tucker')
+#         try:
+#             tm2 = yield tm.update(manual_values={'handle': 'dusktreader'})
+#             tm3 = yield TestVertexModel.get(tm.id)
+#             self.assertEqual(tm2['handle'], 'dusktreader')
+#             self.assertEqual(tm3['handle'], 'dusktreader')
+#         finally:
+#             yield tm.delete()
+#
+#     @gen_test
+#     def test_manual_values_already_exists_error(self):
+#         """ Tests that the update method works as expected """
+#         tm = yield TestVertexModel.create(test_val=8, name='Tucker')
+#         try:
+#             with self.assertRaises(ModelException):
+#                 tm2 = yield tm.update(manual_values={'name': 'dusktreader'})
+#         finally:
+#             yield tm.delete()
+#
+#     @gen_test
+#     def test_unknown_names_raise_exception(self):
 #         """
-#         tv = yield TestEnumVertexModel2.create()
-#         txt = yield TestEnumVertexModel2.TEST_TEXT
-#         self.assertEqual(txt, tv.id)
-#         yield tv.delete()
-#
-#     def test_custom_enum_handling(self):
-#         """ Custom enum handling test
-#
-#         Works utilizing the VertexModel's `enum_generator` instance method to generate the ENUMs
-#         The enum returns the actual Vertex instance because the `__enum_id_only__` was set to False
-#         which stores the entire Vertex instead of just the ID.
+#         Tests that passing in names for columns that don't exist raises an
+#         exception
 #         """
-#         tv = TestEnumVertexModel.create()
-#         self.assertEqual(TestEnumVertexModel.TEST_TEXT_0, tv)
-#         tv.delete()
+#         tm = yield TestVertexModel.create(test_val=8, text='123456789')
+#         try:
+#             with self.assertRaises(TypeError):
+#                 yield tm.update(jon='beard')
+#         finally:
+#             yield tm.delete()
 #
-#     def test_attempt_load_fail(self):
-#         with self.assertRaises(AttributeError):
-#             TestEnumVertexModel.WRONG
-
-
-@attr('unit', 'vertex_io')
-class TestUpdateMethod(BaseGoblinTestCase):
-
-    @gen_test
-    def test_success_case(self):
-        """ Tests that the update method works as expected """
-        tm = yield TestVertexModel.create(test_val=8, name='123456789')
-        try:
-            tm2 = yield tm.update(test_val=9)
-
-            tm3 = yield TestVertexModel.get(tm.id)
-            self.assertEqual(tm2.test_val, 9)
-            self.assertEqual(tm3.test_val, 9)
-        finally:
-            yield tm.delete()
-
-    @gen_test
-    def test_manual_values_update(self):
-        """ Tests that the update method works as expected """
-        tm = yield TestVertexModel.create(
-            test_val=8, name='Tucker', handle='nightrider')
-        try:
-            self.assertEqual(tm['handle'], 'nightrider')
-            tm2 = yield tm.update(manual_values={'handle': 'dusktreader'})
-            tm3 = yield TestVertexModel.get(tm.id)
-            self.assertEqual(tm2['handle'], 'dusktreader')
-            self.assertEqual(tm3['handle'], 'dusktreader')
-        finally:
-            yield tm.delete()
-
-    @gen_test
-    def test_manual_values_new_prop_update(self):
-        """ Tests that the update method works as expected """
-        tm = yield TestVertexModel.create(test_val=8, name='Tucker')
-        try:
-            tm2 = yield tm.update(manual_values={'handle': 'dusktreader'})
-            tm3 = yield TestVertexModel.get(tm.id)
-            self.assertEqual(tm2['handle'], 'dusktreader')
-            self.assertEqual(tm3['handle'], 'dusktreader')
-        finally:
-            yield tm.delete()
-
-    @gen_test
-    def test_manual_values_already_exists_error(self):
-        """ Tests that the update method works as expected """
-        tm = yield TestVertexModel.create(test_val=8, name='Tucker')
-        try:
-            with self.assertRaises(ModelException):
-                tm2 = yield tm.update(manual_values={'name': 'dusktreader'})
-        finally:
-            yield tm.delete()
-
-    @gen_test
-    def test_unknown_names_raise_exception(self):
-        """
-        Tests that passing in names for columns that don't exist raises an
-        exception
-        """
-        tm = yield TestVertexModel.create(test_val=8, text='123456789')
-        try:
-            with self.assertRaises(TypeError):
-                yield tm.update(jon='beard')
-        finally:
-            yield tm.delete()
-
-
+#
 @attr('unit', 'vertex_io')
 class TestVertexTraversal(BaseGoblinTestCase):
 
@@ -800,13 +800,10 @@ class TestVertexTraversal(BaseGoblinTestCase):
             yield v.delete()
 
     @gen_test
-    def test___eq__operator(self):
+    def test_eq_operator(self):
         v1 = yield TestVertexModel.create(test_val=8, name='a')
         try:
-            stream = yield TestVertexModel.find_by_value('test_val', 8)
-            results = yield stream.read()
-            self.assertEqual(len(results), 1)
-            v2 = results[0]
+            v2 = yield TestVertexModel.get(v1.id)
             self.assertTrue(v1 == v2)
         finally:
             yield v1.delete()
@@ -825,12 +822,9 @@ class TestVertexTraversal(BaseGoblinTestCase):
         v1 = yield TestVertexModel.create(test_val=8, name='a', extra_prop=1)
         v3 = yield TestVertexModel.create(test_val=8, name='a', extra_prop=2)
         try:
-            stream = yield TestVertexModel.find_by_value('extra_prop', 1)
-            results = yield stream.read()
-            self.assertEqual(len(results), 1)
-            v2 = results[0]
+            v2 = yield TestVertexModel.get(v1.id)
             self.assertTrue(v1 == v2)
-            self.assertTrue(v1 != v3)
+            self.assertTrue(v2 != v3)
         finally:
             yield v1.delete()
             yield v3.delete()
