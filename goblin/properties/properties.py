@@ -316,17 +316,22 @@ class Decimal(GraphProperty):
     """
     Decimal Data property type
     """
+    data_type = "Float"
     validator = decimal_validator
 
     def to_python(self, value):
         val = super(Decimal, self).to_python(value)
         if val is not None:
-            return _D(val)
+            pos = 0
+            if val < 0:
+                pos = 1
+            digs = [int(i) for i in str(val) if i.isdigit()]
+            return _D((pos, digs, -3))
 
     def to_database(self, value):
         val = super(Decimal, self).to_database(value)
         if val is not None:
-            return str(val)
+            return float(val)
 
 
 class Dictionary(GraphProperty):

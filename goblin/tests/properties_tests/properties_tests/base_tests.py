@@ -30,7 +30,6 @@ class GraphPropertyBaseClassTestCase(BaseGoblinTestCase):
         for case in self.good_cases:
             print_("testing good case: {}".format(case))
             self.assertNotRaise(self.klass().validate, case)
-
         for case in self.bad_cases:
             print_("testing bad case: {}".format(case))
             self.assertRaises(ValidationError, self.klass().validate, case)

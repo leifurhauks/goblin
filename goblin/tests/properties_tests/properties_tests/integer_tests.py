@@ -3,7 +3,8 @@ from nose.plugins.attrib import attr
 
 from tornado.testing import gen_test
 
-from .base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase, create_key
+from goblin import connection
 from goblin.properties.properties import Integer, Short, PositiveInteger, Long, PositiveLong
 from goblin.models import Vertex
 from goblin._compat import print_, long_
@@ -15,11 +16,58 @@ class IntegerPropertyTestCase(GraphPropertyBaseClassTestCase):
     good_cases = (1, 0, None)
     bad_cases = ('', 'a', 1.1, [], [1], {}, {'a': 1})
 
+    @gen_test
+    def test_manual_schema(self):
+        key = IntegerTestVertex.get_property_by_name('test_val')
+        label = IntegerTestVertex.get_label()
+        yield create_key(key, 'Integer')
+        stream = yield connection.execute_query(
+            "graph.addVertex(label, l0, k0, v0)",
+            bindings={'l0': label, 'k0': key, 'v0': 101})
+        resp = yield stream.read()
+        self.assertEqual(
+            resp.data[0]['properties'][key][0]['value'], 101)
+
+    # @gen_test
+    # def test_violate_manual_schema_int(self):
+    #     key = IntegerTestVertex.get_property_by_name('test_val')
+    #     label = IntegerTestVertex.get_label()
+    #     yield create_key(key, 'Integer')
+    #     with self.assertRaises(RuntimeError):
+    #         stream = yield connection.execute_query(
+    #                 "graph.addVertex(label, l0, k0, v0)",
+    #                 bindings={'l0': label, 'k0': key, 'v0': 'hello'})
+    #         resp = yield stream.read()
+
+    @gen_test
+    def test_violate_manual_schema_long(self):
+        key = IntegerTestVertex.get_property_by_name('test_val2')
+        label = IntegerTestVertex.get_label()
+        yield create_key(key, 'Long')
+        with self.assertRaises(RuntimeError):
+            stream = yield connection.execute_query(
+                    "graph.addVertex(label, l0, k0, v0)",
+                    bindings={'l0': label, 'k0': key, 'v0': 'hello'})
+            resp = yield stream.read()
+
+    @gen_test
+    def test_violate_manual_schema_short(self):
+        key = IntegerTestVertex.get_property_by_name('test_val3')
+        label = IntegerTestVertex.get_label()
+        yield create_key(key, 'Short')
+        with self.assertRaises(RuntimeError):
+            stream = yield connection.execute_query(
+                    "graph.addVertex(label, l0, k0, v0)",
+                    bindings={'l0': label, 'k0': key, 'v0': 'hello'})
+            resp = yield stream.read()
+
 
 class IntegerTestVertex(Vertex):
     element_type = 'test_integer_vertex'
 
     test_val = Integer()
+    test_val2 = Integer()
+    test_val3 = Integer()
 
 
 @attr('unit', 'property', 'property_int')

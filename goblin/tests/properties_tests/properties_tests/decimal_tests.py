@@ -2,8 +2,10 @@ from __future__ import unicode_literals
 from nose.plugins.attrib import attr
 
 from tornado.testing import gen_test
-from .base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase, create_key
+from decimal import getcontext
 from decimal import Decimal as _D
+from goblin import connection
 from goblin.properties.properties import Decimal
 from goblin.models import Vertex
 from goblin._compat import print_
@@ -12,14 +14,39 @@ from goblin._compat import print_
 @attr('unit', 'property', 'property_decimal')
 class DecimalPropertyTestCase(GraphPropertyBaseClassTestCase):
     klass = Decimal
-    good_cases = (1.1, 0.0, _D(1.1), None)
-    bad_cases = (0, 'val', ['val'], {'val': 1})
+    good_cases = (1.101, 1.11, 0.001, _D((0, (1, 0, 0, 0), -3)),
+                  _D((0, (1, 0, 0, ), -2)))
+    bad_cases = (0, 1.2345, 'val', ['val'], {'val': 1}, '', '1.234',
+                 _D((0, (1, 0, 0, 0, 1), -4)))
+
+    @gen_test
+    def test_manual_schema(self):
+        key = DecimalTestVertex.get_property_by_name('test_val1')
+        label = DecimalTestVertex.get_label()
+        yield create_key(key, 'Float')
+        stream = yield connection.execute_query(
+            "graph.addVertex(label, l0, k0, v0)",
+            bindings={'l0': label, 'k0': key, 'v0': 1.23})
+        resp = yield stream.read()
+        self.assertEqual(
+            resp.data[0]['properties'][key][0]['value'], 1.23)
+
+    @gen_test
+    def test_violate_manual_schema(self):
+        key = DecimalTestVertex.get_property_by_name('test_val1')
+        label = DecimalTestVertex.get_label()
+        yield create_key(key, 'Float')
+        with self.assertRaises(RuntimeError):
+            stream = yield connection.execute_query(
+                    "graph.addVertex(label, l0, k0, v0)",
+                    bindings={'l0': label, 'k0': key, 'v0': 'decimal'})
+            resp = yield stream.read()
+            print(resp)
 
 
 class DecimalTestVertex(Vertex):
     element_type = 'test_decimal_vertex'
-
-    test_val = Decimal()
+    test_val1 = Decimal()
 
 
 @attr('unit', 'property', 'property_decimal')
@@ -27,19 +54,15 @@ class DecimalVertexTestCase(GraphPropertyBaseClassTestCase):
 
     @gen_test
     def test_decimal_io(self):
-        print_("creating vertex")
-        dt = yield DecimalTestVertex.create(test_val=_D('1.00'))
-        print_("getting vertex from vertex: %s" % dt)
-        dt2 = yield DecimalTestVertex.get(dt._id)
-        print_("got vertex: %s\n" % dt2)
-        self.assertEqual(dt2.test_val, dt.test_val)
-        print_("deleting vertex")
-        yield dt2.delete()
-
-        dt = yield DecimalTestVertex.create(test_val=5)
-        print_("\ncreated vertex: %s" % dt)
-        dt2 = yield DecimalTestVertex.get(dt._id)
-        print_("Got decimal vertex: %s" % dt2)
-        self.assertEqual(dt2.test_val, _D('5'))
-        print_("deleting vertex")
-        yield dt2.delete()
+        key = DecimalTestVertex.get_property_by_name('test_val1')
+        yield create_key(key, 'Float')
+        dt1 = yield DecimalTestVertex.create(test_val1=_D((0, (5, 0, 0, 0), -3)))
+        dt3 = yield DecimalTestVertex.create(test_val1=-1.001)
+        try:
+            dt2 = yield DecimalTestVertex.get(dt1._id)
+            self.assertEqual(dt1.test_val1, dt2.test_val1)
+            dt4 = yield DecimalTestVertex.get(dt3._id)
+            self.assertEqual(dt4.test_val1, _D((1, (1, 0, 0, 1), -3)))
+        finally:
+            yield dt1.delete()
+            yield dt3.delete()

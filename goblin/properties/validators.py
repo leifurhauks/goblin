@@ -69,8 +69,16 @@ class FloatValidator(NumericValidator):
 float_validator = FloatValidator()
 
 
-class DecimalValidator(NumericValidator):
+class DecimalValidator(BaseValidator):
     data_types = float_types + (_D, )
+    message = 'Please pass precision 3 Decimal or float'
+
+    def __call__(self, value):
+        dec_str = str(value)
+        prec = dec_str[::-1].find('.')
+        if not isinstance(value, self.__class__.data_types) or prec > 3:
+            raise ValidationError(self.message, code=self.code)
+        return value
 
 
 decimal_validator = DecimalValidator()

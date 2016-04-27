@@ -63,7 +63,7 @@ class FloatValidatorTestCase(ValidatorBaseClassTestCase):
 @attr('unit', 'validators')
 class DecimalValidatorTestCase(FloatValidatorTestCase):
     klass = DecimalValidator()
-    good_cases = (1.1, _D(1.1))
+    good_cases = (1.1, _D((0, (1, 0, 0, 0), -3)))
 
 
 @attr('unit', 'validators')
