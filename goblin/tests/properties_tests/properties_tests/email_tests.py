@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from nose.plugins.attrib import attr
 
 from tornado.testing import gen_test
-from .base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase, create_key
 from goblin.properties.properties import Email
 from goblin.models import Vertex
 from goblin._compat import print_
@@ -30,6 +30,8 @@ class EmailVertexTestCase(GraphPropertyBaseClassTestCase):
     @gen_test
     def test_email_io(self):
         print_("creating vertex")
+        key = EmailTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'String')
         dt = yield EmailTestVertex.create(test_val='alice@alice.com')
         print_("getting vertex from vertex: %s" % dt)
         dt2 = yield EmailTestVertex.get(dt._id)

@@ -19,30 +19,6 @@ class DecimalPropertyTestCase(GraphPropertyBaseClassTestCase):
     bad_cases = (0, 1.2345, 'val', ['val'], {'val': 1}, '', '1.234',
                  _D((0, (1, 0, 0, 0, 1), -4)))
 
-    @gen_test
-    def test_manual_schema(self):
-        key = DecimalTestVertex.get_property_by_name('test_val1')
-        label = DecimalTestVertex.get_label()
-        yield create_key(key, 'Float')
-        stream = yield connection.execute_query(
-            "graph.addVertex(label, l0, k0, v0)",
-            bindings={'l0': label, 'k0': key, 'v0': 1.23})
-        resp = yield stream.read()
-        self.assertEqual(
-            resp.data[0]['properties'][key][0]['value'], 1.23)
-
-    @gen_test
-    def test_violate_manual_schema(self):
-        key = DecimalTestVertex.get_property_by_name('test_val1')
-        label = DecimalTestVertex.get_label()
-        yield create_key(key, 'Float')
-        with self.assertRaises(RuntimeError):
-            stream = yield connection.execute_query(
-                    "graph.addVertex(label, l0, k0, v0)",
-                    bindings={'l0': label, 'k0': key, 'v0': 'decimal'})
-            resp = yield stream.read()
-            print(resp)
-
 
 class DecimalTestVertex(Vertex):
     element_type = 'test_decimal_vertex'

@@ -290,7 +290,8 @@ class Double(GraphProperty):
     validator = float_validator
 
     def __init__(self, **kwargs):
-        self.db_type = 'double'
+        # Hmmm maybe we should do this for all props?
+        self.db_type = 'Double'
         super(Double, self).__init__(**kwargs)
 
     def to_python(self, value):
@@ -304,11 +305,8 @@ class Double(GraphProperty):
 
 
 class Float(Double):
-    """Float class for backwards compatability / if you really want to"""
 
     def __init__(self, **kwargs):
-        warnings.warn("Float type is deprecated. Please use Double.",
-                      category=DeprecationWarning)
         super(Float, self).__init__(**kwargs)
 
 
