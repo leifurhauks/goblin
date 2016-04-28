@@ -332,14 +332,6 @@ class Decimal(GraphProperty):
             return float(val)
 
 
-class List(GraphProperty):
-    """
-    List Data property type
-    """
-    data_type = "ArrayList"
-    validator = list_validator
-
-
 class URL(GraphProperty):
     """
     URL Data property type

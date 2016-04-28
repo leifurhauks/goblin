@@ -123,18 +123,6 @@ class StringValidator(BaseValidator):
 string_validator = StringValidator()
 
 
-class ListValidator(BaseValidator):
-    message = 'Enter a valid list'
-    data_types = array_types
-
-    def __call__(self, value):
-        if not isinstance(value, self.data_types):
-            raise ValidationError(self.message, code=self.code)
-        return value
-
-list_validator = ListValidator()
-
-
 class DateTimeValidator(BaseValidator):
     message = 'Not a valid DateTime: {}'
 
