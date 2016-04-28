@@ -135,17 +135,6 @@ class ListValidator(BaseValidator):
 list_validator = ListValidator()
 
 
-class DictValidator(BaseValidator):
-    message = 'Enter a valid dict'
-
-    def __call__(self, value):
-        if not isinstance(value, dict):
-            raise ValidationError(self.message, code=self.code)
-        return value
-
-dict_validator = DictValidator()
-
-
 class DateTimeValidator(BaseValidator):
     message = 'Not a valid DateTime: {}'
 

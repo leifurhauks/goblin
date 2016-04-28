@@ -334,14 +334,6 @@ class Decimal(GraphProperty):
             return float(val)
 
 
-class Dictionary(GraphProperty):
-    """
-    Dictionary Data property type
-    """
-    data_type = "HashMap"
-    validator = dict_validator
-
-
 class List(GraphProperty):
     """
     List Data property type
