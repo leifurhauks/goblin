@@ -28,16 +28,16 @@ class IntegerPropertyTestCase(GraphPropertyBaseClassTestCase):
         self.assertEqual(
             resp.data[0]['properties'][key][0]['value'], 101)
 
-    # @gen_test
-    # def test_violate_manual_schema_int(self):
-    #     key = IntegerTestVertex.get_property_by_name('test_val')
-    #     label = IntegerTestVertex.get_label()
-    #     yield create_key(key, 'Integer')
-    #     with self.assertRaises(RuntimeError):
-    #         stream = yield connection.execute_query(
-    #                 "graph.addVertex(label, l0, k0, v0)",
-    #                 bindings={'l0': label, 'k0': key, 'v0': 'hello'})
-    #         resp = yield stream.read()
+    @gen_test
+    def test_violate_manual_schema_int(self):
+        key = IntegerTestVertex.get_property_by_name('test_val1')
+        label = IntegerTestVertex.get_label()
+        yield create_key(key, 'Integer')
+        with self.assertRaises(RuntimeError):
+            stream = yield connection.execute_query(
+                    "graph.addVertex(label, l0, k0, v0)",
+                    bindings={'l0': label, 'k0': key, 'v0': 'hello'})
+            resp = yield stream.read()
 
     @gen_test
     def test_violate_manual_schema_long(self):
@@ -65,7 +65,7 @@ class IntegerPropertyTestCase(GraphPropertyBaseClassTestCase):
 class IntegerTestVertex(Vertex):
     element_type = 'test_integer_vertex'
 
-    test_val = Integer()
+    test_val1 = Integer()
     test_val2 = Integer()
     test_val3 = Integer()
 
@@ -76,19 +76,21 @@ class IntegerVertexTestCase(GraphPropertyBaseClassTestCase):
     @gen_test
     def test_integer_io(self):
         print_("creating vertex")
-        dt = yield IntegerTestVertex.create(test_val=1)
+        key = IntegerTestVertex.get_property_by_name('test_val1')
+        yield create_key(key, 'Integer')
+        dt = yield IntegerTestVertex.create(test_val1=1)
         print_("getting vertex from vertex: %s" % dt)
         dt2 = yield IntegerTestVertex.get(dt._id)
         print_("got vertex: %s\n" % dt2)
-        self.assertEqual(dt2.test_val, dt.test_val)
+        self.assertEqual(dt2.test_val1, dt.test_val1)
         print_("deleting vertex")
         yield dt2.delete()
 
-        dt = yield IntegerTestVertex.create(test_val=2)
+        dt = yield IntegerTestVertex.create(test_val1=2)
         print_("\ncreated vertex: %s" % dt)
         dt2 = yield IntegerTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
-        self.assertEqual(dt2.test_val, 2)
+        self.assertEqual(dt2.test_val1, 2)
         print_("deleting vertex")
         yield dt2.delete()
 
@@ -112,6 +114,8 @@ class LongVertexTestCase(GraphPropertyBaseClassTestCase):
     @gen_test
     def test_long_io(self):
         print_("creating vertex")
+        key = LongTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Long')
         dt = yield LongTestVertex.create(test_val=1)
         print_("getting vertex from vertex: %s" % dt)
         dt2 = yield LongTestVertex.get(dt._id)
@@ -146,6 +150,8 @@ class ShortVertexTestCase(GraphPropertyBaseClassTestCase):
     @gen_test
     def test_short_io(self):
         print_("creating vertex")
+        key = ShortTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Short')
         dt = yield ShortTestVertex.create(test_val=1)
         print_("getting vertex from vertex: %s" % dt)
         dt2 = yield ShortTestVertex.get(dt._id)
@@ -180,6 +186,8 @@ class PositiveIntegerVertexTestCase(GraphPropertyBaseClassTestCase):
     @gen_test
     def test_positive_integer_io(self):
         print_("creating vertex")
+        key = PositiveIntegerTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Integer')
         dt = yield PositiveIntegerTestVertex.create(test_val=1)
         print_("getting vertex from vertex: %s" % dt)
         dt2 = yield PositiveIntegerTestVertex.get(dt._id)
@@ -214,6 +222,8 @@ class PositiveLongVertexTestCase(GraphPropertyBaseClassTestCase):
     @gen_test
     def test_positive_long_io(self):
         print_("creating vertex")
+        key = PositiveLongTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Long')
         dt = yield PositiveLongTestVertex.create(test_val=1)
         print_("getting vertex from vertex: %s" % dt)
         dt2 = yield PositiveLongTestVertex.get(dt._id)
