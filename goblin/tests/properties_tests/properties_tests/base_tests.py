@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+
 from tornado import gen
 from goblin.tests import BaseGoblinTestCase
 from goblin.properties import GraphProperty

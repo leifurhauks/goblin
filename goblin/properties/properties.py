@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 import copy
 import datetime
 from calendar import timegm
@@ -18,8 +20,12 @@ from goblin.properties.validators import *
 class String(GraphProperty):
     """
     String/CharField property
+
+    :param str min_length: minimum string length
+    :param str max_length: minimum string length
+    :param str encoding: string encoding - 'utf-8' by default
     """
-    data_type = "String"
+
     validator = string_validator
 
     def __init__(self, *args, **kwargs):
@@ -41,15 +47,9 @@ class String(GraphProperty):
                 return value
 
     def validate(self, value):
-        # Make sure it gets encoded properly
+        # Make sure it gets encoded correctly
         if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
-
-        value = super(String, self).validate(value)
-
-        # this should never happen unless the Validator is changed
-        if value is None:
-            return None
 
         if self.max_length:
             if len(value) > self.max_length:
@@ -60,97 +60,54 @@ class String(GraphProperty):
                 raise ValidationError(
                     '{} is shorter than {} characters'.format(
                         self.property_name, self.min_length))
-        return value
 
-Text = String
+        value = super(String, self).validate(value)
+        return value
 
 
 class Short(GraphProperty):
     """
     Short Data property type
     """
-    data_type = "Short"
+    deserializer = int
+    serializer = int
     validator = integer_validator
-
-    def to_python(self, value):
-        if value is not None:
-            return int(value)
-
-    def to_database(self, value):
-        value = super(Short, self).to_database(value)
-        if value is not None:
-            return int(value)
 
 
 class Integer(GraphProperty):
     """
     Integer Data property type
     """
-    data_type = "Integer"
+    serializer = long_
+    deserializer = long_
     validator = long_validator
-
-    def to_python(self, value):
-        if value is not None:
-            try:
-                return int(value)
-            except:
-                return long_(value)
-
-    def to_database(self, value):
-        value = super(Integer, self).to_database(value)
-        if value is not None:
-            return long_(value)
 
 
 class PositiveInteger(Integer):
     """
     Positive Integer Data property type
     """
-    data_type = "Integer"
+    serializer = long_
+    deserializer = long_
     validator = positive_integer_validator
-
-    def to_python(self, value):
-        if value is not None:
-            return long_(value)
-
-    def to_database(self, value):
-        value = super(Integer, self).to_database(value)
-        if value is not None:
-            return long_(value)
 
 
 class Long(GraphProperty):
     """
     Long Data property type
     """
-    data_type = "Long"
+    serializer = long_
+    deserializer = long_
     validator = long_validator
-
-    def to_python(self, value):
-        if value is not None:
-            return long_(value)
-
-    def to_database(self, value):
-        value = super(Long, self).to_database(value)
-        if value is not None:
-            return long_(value)
 
 
 class PositiveLong(Long):
     """
     Positive Long Data property type
     """
-    data_type = "Long"
+    serializer = long_
+    deserializer = long_
     validator = positive_integer_validator
-
-    def to_python(self, value):
-        if value is not None:
-            return long_(value)
-
-    def to_database(self, value):
-        value = super(Long, self).to_database(value)
-        if value is not None:
-            return long_(value)
 
 
 class DateTimeNaive(GraphProperty):
@@ -248,7 +205,7 @@ class DateTime(GraphProperty):
 
 class UUID(GraphProperty):
     """Universally Unique Identifier (UUID) type"""
-    data_type = "String"
+    serializer = str
     validator = validate_uuid
 
     def to_python(self, value):
@@ -260,61 +217,31 @@ class UUID(GraphProperty):
             else:
                 return value
 
-    def to_database(self, value):
-        val = super(UUID, self).to_database(value)
-        if val is None:
-            return
-        return str(val)
-
 
 class Boolean(GraphProperty):
     """
     Boolean Data property type
     """
-    data_type = "Boolean"
+    deserializer = bool
     validator = bool_validator
-
-    def to_python(self, value):
-        return bool(value)
-
-    def to_database(self, value):
-        val = super(Boolean, self).to_database(value)
-        return bool(val)
 
 
 class Double(GraphProperty):
     """
     Double Data property type
     """
-    data_type = "Double"
+    deserializer = float
     validator = float_validator
 
-    def __init__(self, **kwargs):
-        # Hmmm maybe we should do this for all props?
-        self.db_type = 'Double'
-        super(Double, self).__init__(**kwargs)
 
-    def to_python(self, value):
-        if value is not None:
-            return float(value)
-
-    def to_database(self, value):
-        value = super(Double, self).to_database(value)
-        if value is not None:
-            return float(value)
-
-
-class Float(Double):
-
-    def __init__(self, **kwargs):
-        super(Float, self).__init__(**kwargs)
+Float = Double
 
 
 class Decimal(GraphProperty):
     """
     Decimal Data property type
     """
-    data_type = "Float"
+    serializer = float
     validator = decimal_validator
 
     def to_python(self, value):
@@ -326,65 +253,31 @@ class Decimal(GraphProperty):
             digs = [int(i) for i in str(val) if i.isdigit()]
             return _D((pos, digs, -3))
 
-    def to_database(self, value):
-        val = super(Decimal, self).to_database(value)
-        if val is not None:
-            return float(val)
 
-
-class URL(GraphProperty):
+class URL(String):
     """
     URL Data property type
+    String/CharField property
+
+    :param str min_length: minimum string length
+    :param str max_length: minimum string length
+    :param str encoding: string encoding - 'utf-8' by default
     """
-    data_type = "String"
+
     validator = validate_url
 
     def __init__(self, *args, **kwargs):
-        required = kwargs.get('required', False)
-        self.min_length = kwargs.pop('min_length', 1 if required else None)
-        self.max_length = kwargs.pop('max_length', None)
-        self.encoding = kwargs.pop('encoding', 'utf-8')
-        if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            if not PY3:
-                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(URL, self).__init__(*args, **kwargs)
 
     def validate(self, value):
-        # Make sure it gets encoded correctly
-        if isinstance(value, text_type) and not PY3:
-            value = value.encode(self.encoding)
-
-        value = super(URL, self).validate(value)
-
-        # this should never happen unless the validator is customized
-        if value in (None, [], (), {}):  # pragma: no cover
-            return None
-
-        if value is not None:
-            if isinstance(value, (bytes, bytearray)) and not isinstance(value,
-                                                                        str):
-                return value.decode(self.encoding)
-
-        if self.max_length:
-            if len(value) > self.max_length:
-                raise ValidationError('{} is longer than {} characters'.format(
-                    self.property_name, self.max_length))
-        if self.min_length:
-            if len(value) < self.min_length:
-                raise ValidationError(
-                    '{} is shorter than {} characters'.format(
-                        self.property_name, self.min_length))
-
-        self.validator(value)
-
-        return value
+        return super(URL, self).validate(value)
 
 
 class Email(GraphProperty):
     """
     Email Data property type
     """
-    data_type = "String"
+
     validator = validate_email
 
     def __init__(self, *args, **kwargs):
@@ -398,24 +291,7 @@ class Email(GraphProperty):
         # Make sure it gets encoded correctly
         if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
-
         value = super(Email, self).validate(value)
-
-        # This should never happen unless the validator is changed
-        if value in (None, [], (), {}):  # pragma: no cover
-            return None
-
-        if value is not None:
-            if isinstance(value, (bytes, bytearray)) and not isinstance(value,
-                                                                        str):
-                return value.decode(self.encoding)
-
-        # This should never happen unless the validator is changed
-        if not isinstance(value, string_types):  # pragma: no cover
-            raise ValidationError('%s is not a string' % type(value))
-
-        self.validator(value)
-
         return value
 
 
@@ -423,7 +299,8 @@ class IPV4(GraphProperty):
     """
     IPv4 Data property type
     """
-    data_type = "String"
+    serializer = str
+    deserializer = ipaddress.IPv4Address
     validator = validate_ipv4_address
 
     def __init__(self, *args, **kwargs):
@@ -433,107 +310,46 @@ class IPV4(GraphProperty):
                 kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(IPV4, self).__init__(*args, **kwargs)
 
+    def to_python(self, value):
+        if value:
+            value = ipaddress.ip_address(value)
+        return value
+
     def validate(self, value):
         # Make sure it gets encoded correctly
         if isinstance(value, text_type) and not PY3:
             value = value.encode(self.encoding)
-
         value = super(IPV4, self).validate(value)
-
-        # This should never happen unless the validator is changed
-        if value in (None, [], (), {}):  # pragma: no cover
-            return None
-
-        if value is not None:
-            if isinstance(value, (bytes, bytearray)) and not isinstance(value,
-                                                                        str):
-                return value.decode(self.encoding)
-
-        # This should never happen unless the validator is changed
-        if not isinstance(value, string_types):  # pragma: no cover
-            raise ValidationError('%s is not a string' % type(value))
-
-        self.validator(value)
-
         return value
 
 
-class IPV6(GraphProperty):
+class IPV6(IPV4):
     """
     IPv6 Data property type
     """
-    data_type = "String"
+
+    deserializer = ipaddress.IPv4Address
     validator = validate_ipv6_address
 
     def __init__(self, *args, **kwargs):
-        self.encoding = kwargs.pop('encoding', 'utf-8')
-        if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            if not PY3:
-                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(IPV6, self).__init__(*args, **kwargs)
 
     def validate(self, value):
-        # Make sure it gets encoded correctly
-        if isinstance(value, text_type) and not PY3:
-            value = value.encode(self.encoding)
-
-        value = super(IPV6, self).validate(value)
-
-        if value is not None:
-            if isinstance(value, (bytes, bytearray)) and not isinstance(value,
-                                                                        str):
-                return value.decode(self.encoding)
-
-        # This shouldn't happend unless the validator is changed
-        if value in (None, [], (), {}):  # pragma: no cover
-            return None
-
-        # This shouldn't happend unless the validator is changed
-        if not isinstance(value, string_types):  # pragma: no cover
-            raise ValidationError('%s is not a string' % type(value))
-
-        self.validator(value)
-
-        return value
+        return super(IPV6, self).validate(value)
 
 
-class IPV6WithV4(GraphProperty):
+class IPV6WithV4(IPV6):
     """
     IPv6 with Mapped/Translated/Embedded IPv4 Data property type
     """
-    data_type = "String"
-    validator = validate_ipv6_ipv4_address
+    deserializer = ipaddress.IPv4Address
+    validator = validate_ipv6v4_address
 
     def __init__(self, *args, **kwargs):
-        self.encoding = kwargs.pop('encoding', 'utf-8')
-        if 'default' in kwargs and isinstance(kwargs['default'], string_types):
-            if not PY3:
-                kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(IPV6WithV4, self).__init__(*args, **kwargs)
 
     def validate(self, value):
-        # Make sure it gets encoded correctly
-        if isinstance(value, text_type) and not PY3:
-            value = value.encode(self.encoding)
-
-        value = super(IPV6WithV4, self).validate(value)
-
-        # This shouldn't happend unless the validator is changed
-        if value in (None, [], (), {}):  # pragma: no cover
-            return None
-
-        if value is not None:
-            if isinstance(value, (bytes, bytearray)) and not isinstance(value,
-                                                                        str):
-                return value.decode(self.encoding)
-
-        # This shouldn't happend unless the validator is changed
-        if not isinstance(value, string_types):  # pragma: no cover
-            raise ValidationError('%s is not a string' % type(value))
-
-        self.validator(value)
-
-        return value
+        return super(IPV6WithV4, self).validate(value)
 
 
 class Slug(GraphProperty):
@@ -556,18 +372,5 @@ class Slug(GraphProperty):
             value = value.encode(self.encoding)
 
         value = super(Slug, self).validate(value)
-
-        if value in (None, [], (), {}):
-            return None
-
-        if value is not None:
-            if isinstance(value, (bytes, bytearray)) and not isinstance(value,
-                                                                        str):
-                return value.decode(self.encoding)
-
-        if not isinstance(value, string_types):
-            raise ValidationError('%s is not a string' % type(value))
-
-        self.validator(value)
 
         return value

@@ -58,8 +58,8 @@ class TestModelClassFunction(BaseGoblinTestCase):
 
         with self.assertRaises(ModelException):
             class BadNames(Vertex):
-                words = properties.Text()
-                content = properties.Text(db_field='words')
+                words = properties.String()
+                content = properties.String(db_field='words')
 
     def test_value_managers_are_keeping_model_instances_isolated(self):
         """
@@ -83,7 +83,7 @@ class TestManualTableNaming(BaseGoblinTestCase):
 
 class BaseAbstractVertex(Vertex):
     __abstract__ = True
-    data = properties.Text()
+    data = properties.String()
 
 
 class DerivedAbstractVertex(BaseAbstractVertex):

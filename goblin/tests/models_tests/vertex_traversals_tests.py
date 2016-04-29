@@ -17,17 +17,17 @@ from goblin import properties
 
 # Vertices
 class Person(Vertex):
-    name = properties.Text()
+    name = properties.String()
     age = properties.Integer()
 
 
 class Course(Vertex):
-    name = properties.Text()
+    name = properties.String()
     credits = properties.Double()
 
 
 class ResearchGroup(Vertex):
-    name = properties.Text()
+    name = properties.String()
 
 
 # Edges
@@ -37,7 +37,7 @@ class EnrolledIn(Edge):
 
 
 class TaughtBy(Edge):
-    overall_mood = properties.Text(default='Grumpy')
+    overall_mood = properties.String(default='Grumpy')
 
 
 class BelongsTo(Edge):

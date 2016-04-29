@@ -63,31 +63,3 @@ class TestChangedProperty(BaseGoblinTestCase):
         self.assertFalse(vm.changed)
         vm.value += D('1.00')
         self.assertTrue(vm.changed)
-
-    def test_dictionary_update(self):
-        """ Tests changes on dict types """
-        vm = Dictionary.value_manager(Dictionary(), {1: 2, 3: 4}, strategy=SaveOnChange)
-        self.assertFalse(vm.changed)
-        vm.value = {4: 5}
-        self.assertTrue(vm.changed)
-
-    def test_dictionary_inplace_update(self):
-        """ Tests changes on dict in place types """
-        vm = Dictionary.value_manager(Dictionary(), {1: 2, 3: 4}, strategy=SaveOnChange)
-        self.assertFalse(vm.changed)
-        vm.value[4] = 5
-        self.assertTrue(vm.changed)
-
-    def test_list_update(self):
-        """ Tests changes on list types """
-        vm = List.value_manager(List(), [1, 2, 3], strategy=SaveOnChange)
-        self.assertFalse(vm.changed)
-        vm.value = [4, 5, 6]
-        self.assertTrue(vm.changed)
-
-    def test_list_inplace_update(self):
-        """ Tests changes on list in place types """
-        vm = List.value_manager(List(), [1, 2, 3], strategy=SaveOnChange)
-        self.assertFalse(vm.changed)
-        vm.value.append(4)
-        self.assertTrue(vm.changed)

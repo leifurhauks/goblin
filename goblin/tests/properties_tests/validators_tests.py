@@ -102,35 +102,15 @@ class StringValidatorTestCase(ValidatorBaseClassTestCase):
     klass = StringValidator()
     good_cases = ('val', )
     if PY2:
-        bad_cases = (1.1, [], (), {}, None, 0, long(1), False)
+        bad_cases = (1.1, [], (), {}, 0, long(1), False)
     else:
-        bad_cases = (1.1, [], (), {}, None, 0, False)
-
-
-@attr('unit', 'validators')
-class ListValidatorTestCase(ValidatorBaseClassTestCase):
-    klass = ListValidator()
-    good_cases = ([], ['val'], (), tuple('val'))
-    if PY2:
-        bad_cases = ('val', {}, None, 0, long(1), False)
-    else:
-        bad_cases = ('val', {}, None, 0, False)
-
-
-@attr('unit', 'validators')
-class DictValidatorTestCase(ValidatorBaseClassTestCase):
-    klass = DictValidator()
-    good_cases = ({}, {'value': 1})
-    if PY2:
-        bad_cases = ('val', [], (), None, 0, long(1), False, 1.1)
-    else:
-        bad_cases = ('val', [], (), None, 0, False, 1.1)
+        bad_cases = (1.1, [], (), {}, 0, False)
 
 
 @attr('unit', 'validators')
 class DateTimeValidatorTestCase(ValidatorBaseClassTestCase):
     klass = DateTimeValidator()
-    good_cases = (datetime.datetime.now(), None)
+    good_cases = (datetime.datetime.now(),)
     if PY2:
         bad_cases = ('val', [], (), {}, 0, long(1), False, 1.1)
     else:
@@ -140,7 +120,7 @@ class DateTimeValidatorTestCase(ValidatorBaseClassTestCase):
 @attr('unit', 'property')
 class DateTimeUTCValidatorTestCase(ValidatorBaseClassTestCase):
     klass = DateTimeUTCValidator()
-    good_cases = (datetime.datetime.now(tz=utc), None, datetime.datetime.now())
+    good_cases = (datetime.datetime.now(tz=utc), datetime.datetime.now())
     if PY2:
         bad_cases = ('val', [], (), {}, 0, long(1), False, 1.1)
     else:
@@ -209,7 +189,7 @@ class IPV6ValidatorTestCase(ValidatorBaseClassTestCase):
 class IPV6With4ValidatorTestCase(ValidatorBaseClassTestCase):
     """ IPv4 mapped/translated/embedded IPv6 Validator """
 
-    klass = validate_ipv6_ipv4_address
+    klass = validate_ipv6v4_address
     good_cases = ('1:2:3:4:5:6:7:8', '1::', '1:2:3:4:5:6:7::',  # IPv6
                   '1::8', '1:2:3:4:5:6::8', '1:2:3:4:5:6::8',
                   '1::7:8', '1:2:3:4:5::7:8', '1:2:3:4:5::8',

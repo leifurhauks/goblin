@@ -15,7 +15,7 @@ from goblin import gremlin
 
 
 class GroovyTestModel(Vertex):
-    text = properties.Text()
+    text = properties.String()
     get_self = gremlin.GremlinMethod()
     cm_get_self = gremlin.GremlinMethod(method_name='get_self',
                                         classmethod=True)

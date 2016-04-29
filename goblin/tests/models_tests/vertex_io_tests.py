@@ -25,12 +25,12 @@ class TestVertexModel2(Vertex):
 
 
 class OtherTestModel(Vertex):
-    name = properties.Text(default='test_text')
+    name = properties.String(default='test_text')
     test_val = properties.Integer(default=3)
 
 
 class AliasedTestModel(Vertex):
-    name = properties.Text()
+    name = properties.String()
     test_val = properties.Integer(db_field='how_many')
 
 
@@ -275,7 +275,7 @@ class TestVertexIO(BaseGoblinTestCase):
 
 class DeserializationTestModel(Vertex):
     count = properties.Integer()
-    text = properties.Text()
+    text = properties.String()
 
     gremlin_path = 'deserialize.groovy'
 

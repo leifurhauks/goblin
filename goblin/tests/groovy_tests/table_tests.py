@@ -20,7 +20,7 @@ class GroovyTestModel2(Vertex):
 
     element_type = 'groovy_test_model2'
 
-    text = properties.Text()
+    text = properties.String()
 
     get_table_of_models = gremlin.GremlinTable(
         path='groovy_test_model.groovy',

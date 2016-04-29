@@ -106,7 +106,8 @@ class BaseValueManager(object):
     def get_property(self):
         """
         Returns a value-managed property attributes
-
+        TODO!!!!!!!!!!!!!
+        Is this used?
         :rtype: property
 
         """
@@ -126,20 +127,21 @@ class GraphProperty(object):
     value_manager = BaseValueManager
     validator = pass_all_validator
     instance_counter = 0
+    serializer = None
+    deserializer = None
 
-    def __init__(self, description=None, primary_key=False, index=False,
+    def __init__(self, description=None, index=False, protected=False,
                  index_ext=None, db_field=None, choices=None, default=None,
-                 required=False, save_strategy=SaveAlways, unique=None,
-                 db_field_prefix=''):
+                 required=False, save_strategy=SaveAlways, db_field_prefix=''):
         """
         Initialize this graph property with the given information.
 
         :param description: description of this field
         :type description: basestring | str
-        :param primary_key: Indicates whether or not this is primary key
-        :type primary_key: bool
         :param index: Indicates whether or not this field is indexed
-        :type index: bool
+        :type index: bool - Fine (used later with schema management)
+        :param protected: Indicates whether or not this field can be deleted
+        :type protected: bool
         :param db_field: The property this field will map to in the database
         :type db_field: basestring | str
         :param choices: A dict of possible choices where the key is the value
@@ -152,15 +154,12 @@ class GraphProperty(object):
         :type required: bool
         :param save_strategy: Strategy used when saving the value of the column
         :type save_strategy: strategy.Strategy
-        :param unique: Uniqueness constraint left in for backwards
-            compatibility -- used by Spec system.
-        :type unique: bool
         :param db_field_prefix: The property prefix associated with the Model.
         :type db_field_prefix: basestring | None
 
         """
         self.description = description
-        self.primary_key = primary_key
+        self.protected = protected
         self.index = index
         self.index_ext = index_ext
         self.db_field = db_field
@@ -168,7 +167,6 @@ class GraphProperty(object):
         self.default = default
         self.required = required
         self.save_strategy = save_strategy
-        self.unique = unique
         self.choices = choices
 
         # the graph property name in the model definition
@@ -236,6 +234,8 @@ class GraphProperty(object):
 
         :rtype: Object
         """
+        if value and self.deserializer:
+            value = self.deserializer(value)
         return value
 
     def to_database(self, value):
@@ -245,7 +245,9 @@ class GraphProperty(object):
         :rtype: Object
         """
         if value is None and self.has_default:
-            return self.get_default()
+            value = self.get_default()
+        if value and self.serializer:
+            value = self.serializer(value)
         return value
 
     @property
@@ -259,7 +261,7 @@ class GraphProperty(object):
 
     @property
     def can_delete(self):
-        return not self.primary_key
+        return not self.protected
 
     def should_save(self, first_save=False):
         """
@@ -281,7 +283,7 @@ class GraphProperty(object):
         :rtype: Callable
 
         """
-        return self.save_strategy or (SaveAlways if not self.primary_key
+        return self.save_strategy or (SaveAlways if not self.protected
                                       else SaveOnce)
 
     def get_default(self):

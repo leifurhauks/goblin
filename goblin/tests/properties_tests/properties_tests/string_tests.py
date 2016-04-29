@@ -4,7 +4,7 @@ from tornado.testing import gen_test
 from goblin import connection
 from goblin.tests import BaseGoblinTestCase
 from .base_tests import GraphPropertyBaseClassTestCase, create_key
-from goblin.properties.properties import String, Text, GraphProperty
+from goblin.properties.properties import String, GraphProperty
 from goblin.models import Vertex
 from goblin.exceptions import ValidationError
 from goblin._compat import print_
@@ -76,42 +76,6 @@ class StringVertexTestCase(GraphPropertyBaseClassTestCase):
         dt2 = yield StringTestVertex.get(dt._id)
         print_("Got vertex: %s" % dt2)
         self.assertEqual(dt2.test_val, 'tset')
-        print_("deleting vertex")
-        yield dt2.delete()
-
-
-@attr('unit', 'property', 'property_string')
-class TextPropertyTestCase(StringPropertyTestCase):
-    klass = Text
-
-
-class TextTestVertex(Vertex):
-    element_type = 'test_text_vertex'
-
-    test_val = Text()
-
-
-@attr('unit', 'property', 'property_string')
-class TextVertexTestCase(GraphPropertyBaseClassTestCase):
-
-    @gen_test
-    def test_text_io(self):
-        print_("creating vertex")
-        key = TextTestVertex.get_property_by_name('test_val')
-        yield create_key(key, 'String')
-        dt = yield TextTestVertex.create(test_val='ab12')
-        print_("getting vertex from vertex: %s" % dt)
-        dt2 = yield TextTestVertex.get(dt._id)
-        print_("got vertex: %s\n" % dt2)
-        self.assertEqual(dt2.test_val, dt.test_val)
-        print_("deleting vertex")
-        yield dt2.delete()
-
-        dt = yield TextTestVertex.create(test_val='12ab')
-        print_("\ncreated vertex: %s" % dt)
-        dt2 = yield TextTestVertex.get(dt._id)
-        print_("Got vertex: %s" % dt2)
-        self.assertEqual(dt2.test_val, '12ab')
         print_("deleting vertex")
         yield dt2.delete()
 

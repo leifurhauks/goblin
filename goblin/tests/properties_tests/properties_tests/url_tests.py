@@ -3,7 +3,7 @@ from nose.plugins.attrib import attr
 
 from tornado.testing import gen_test
 
-from .base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase, create_key
 from goblin.properties.properties import URL
 from goblin.models import Vertex
 from goblin.exceptions import ValidationError
@@ -41,6 +41,8 @@ class URLVertexTestCase(GraphPropertyBaseClassTestCase):
 
     @gen_test
     def test_url_io(self):
+        key = URLTestVertex.get_property_by_name('test_val')
+        yield create_key(key, 'String')
         print_("creating vertex")
         dt = yield URLTestVertex.create(test_val='http://wellaware.us')
         print_("getting vertex from vertex: %s" % dt)

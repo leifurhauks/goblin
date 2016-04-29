@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
+
 from collections import Iterable
 import datetime
 import re
 from decimal import Decimal as _D
+import six
 
 try:
     from urllib.parse import urlsplit, urlunsplit
@@ -10,6 +12,7 @@ except ImportError:     # Python 2
     from urlparse import urlsplit, urlunsplit
 
 from pytz import utc
+import ipaddress
 
 from goblin._compat import (string_types, text_type, float_types,
                             integer_types, array_types, bool_types, print_)
@@ -36,6 +39,7 @@ class BaseValidator(object):
         """
         return value
 
+
 pass_all_validator = BaseValidator()
 
 
@@ -46,6 +50,7 @@ class BooleanValidator(BaseValidator):
         if not isinstance(value, bool_types):
             raise ValidationError(self.message, self.code)
         return value
+
 
 bool_validator = BooleanValidator()
 
@@ -58,6 +63,7 @@ class NumericValidator(BaseValidator):
         if not isinstance(value, self.__class__.data_types):
             raise ValidationError(self.message, code=self.code)
         return value
+
 
 numeric_validator = NumericValidator()
 
@@ -127,9 +133,10 @@ class DateTimeValidator(BaseValidator):
     message = 'Not a valid DateTime: {}'
 
     def __call__(self, value):
-        if not isinstance(value, datetime.datetime) and value is not None:
+        if not isinstance(value, datetime.datetime):
             raise ValidationError(self.message.format(value), code=self.code)
         return value
+
 
 datetime_validator = DateTimeValidator()
 
@@ -139,9 +146,7 @@ class DateTimeUTCValidator(BaseValidator):
 
     def __call__(self, value):
         super(DateTimeUTCValidator, self).__call__(value)
-        if value is None:
-            return
-        if not isinstance(value, datetime.datetime) and value is not None:
+        if not isinstance(value, datetime.datetime):
             raise ValidationError(self.message.format(value), code=self.code)
         if value and value.tzinfo != utc:
             # print_("Got value with timezone: {} - {}".format(value, value.tzinfo))
@@ -164,7 +169,9 @@ datetime_utc_validator = DateTimeUTCValidator()
 
 
 class RegexValidator(BaseValidator):
+
     regex = ''
+    data_type = string_types
 
     def __init__(self, regex=None, message=None, code=None):
         super(RegexValidator, self).__init__(message=message, code=code)
@@ -179,6 +186,8 @@ class RegexValidator(BaseValidator):
         """
         Validates that the input matches the regular expression.
         """
+        if not isinstance(value, self.data_type):
+            raise ValidationError(self.message.format(value), code=self.code)
         if not self.regex.search(text_type(value)):
             raise ValidationError(self.message, code=self.code)
         else:
@@ -220,6 +229,9 @@ class URLValidator(RegexValidator):
         return value
 
 
+validate_url = URLValidator()
+
+
 class EmailValidator(RegexValidator):
 
     regex = re.compile(
@@ -251,7 +263,9 @@ class EmailValidator(RegexValidator):
                                       code=self.code)
         return value
 
+
 validate_email = EmailValidator()
+
 
 slug_re = re.compile(r'^[-a-zA-Z0-9_]+$')
 validate_slug = RegexValidator(
@@ -259,45 +273,59 @@ validate_slug = RegexValidator(
     "Enter a valid 'slug' - letters, numbers, underscores or hyphens.",
     'invalid')
 
-## IPv4
-ipv4_re = re.compile(r'^(25[0-5]|2[0-4]\d|[0-1]?\d?\d)(\.(25[0-5]|2[0-4]\d|[0-1]?\d?\d)){3}$')
-validate_ipv4_address = RegexValidator(ipv4_re, 'Enter a valid IPv4 address.', 'invalid')
+# # IPv6/4
+# ipv64_re = re.compile(
+#     ipv6_re.pattern[:-1] + r'|' +
+#     r'::(ffff(:0{1,4}){0,1}:){0,1}'  # ::255.255.255.255   ::ffff:255.255.255.255  ::ffff:0:255.255.255.255
+#     r'((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}'  # ... (IPv4-mapped IPv6 addresses and IPv4-translated addresses)
+#     r'(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|'
+#     r'([0-9a-fA-F]{1,4}:){1,4}:'  # 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33 (IPv4-Embedded IPv6 Address)
+#     r'((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}'
+#     r'(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])'
+#     r')', re.IGNORECASE)
+#
+# validate_ipv6_ipv4_address = RegexValidator(ipv64_re,
+#                                             'Enter a valid IPv4, IPv6, '
+#                                             '(IPv4-mapped, IPv4 Translated or IPv4-Embedded) IPv6 address',
+#                                             'invalid')
 
-# IPv6
-ipv6_re = re.compile(
-    r'('
-    r'([0-9A-F]{1,4}:){7,7}[0-9A-F]{1,4}|'          # 1:2:3:4:5:6:7:8
-    r'([0-9A-F]{1,4}:){1,7}:|'                      # 1::                              1:2:3:4:5:6:7::
-    r'([0-9A-F]{1,4}:){1,6}:[0-9A-F]{1,4}|'         # 1::8             1:2:3:4:5:6::8  1:2:3:4:5:6::8
-    r'([0-9A-F]{1,4}:){1,5}(:[0-9A-F]{1,4}){1,2}|'  # 1::7:8           1:2:3:4:5::7:8  1:2:3:4:5::8
-    r'([0-9A-F]{1,4}:){1,4}(:[0-9A-F]{1,4}){1,3}|'  # 1::6:7:8         1:2:3:4::6:7:8  1:2:3:4::8
-    r'([0-9A-F]{1,4}:){1,3}(:[0-9A-F]{1,4}){1,4}|'  # 1::5:6:7:8       1:2:3::5:6:7:8  1:2:3::8
-    r'([0-9A-F]{1,4}:){1,2}(:[0-9A-F]{1,4}){1,5}|'  # 1::4:5:6:7:8     1:2::4:5:6:7:8  1:2::8
-    r'[0-9A-F]{1,4}:((:[0-9A-F]{1,4}){1,6})|'       # 1::3:4:5:6:7:8   1::3:4:5:6:7:8  1::8
-    r':((:[0-9A-F]{1,4}){1,7}|:)'                   # ::2:3:4:5:6:7:8  ::2:3:4:5:6:7:8 ::8       ::
-    r')', re.IGNORECASE)
-validate_ipv6_address = RegexValidator(ipv6_re, 'Enter a valid IPv6 address.',
-                                       'invalid')
+class IPValidator(BaseValidator):
+
+    def __init__(self, ipv_class):
+        self.ipv_class = ipv_class
+
+    def __call__(self, value):
+        try:
+            value = self.ipv_class(value)
+        except Exception as exc:
+            raise ValidationError(
+                'Raised {}: {}'.format(exc.__class__, exc.args[0]),
+                code=self.code)
+        else:
+            return value
+
+class IPv6v4Validator(BaseValidator):
+
+    code = 'invalid'
+
+    def __call__(self, value):
+        try:
+            value = ipaddress.IPv6Address(value)
+        except Exception as exc:
+            raise ValidationError(
+                'Raised {}: {}'.format(exc.__class__, exc.args[0]),
+                code=self.code)
+        else:
+            # if value.ipv4_mapped is None:
+            #     raise ValidationError('Does not appear to be IPv4 mapped',
+            #         code=self.code)
+            return value
 
 
-# IPv6/4
-ipv64_re = re.compile(
-    ipv6_re.pattern[:-1] + r'|' +
-    r'::(ffff(:0{1,4}){0,1}:){0,1}'  # ::255.255.255.255   ::ffff:255.255.255.255  ::ffff:0:255.255.255.255
-    r'((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}'  # ... (IPv4-mapped IPv6 addresses and IPv4-translated addresses)
-    r'(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|'
-    r'([0-9a-fA-F]{1,4}:){1,4}:'  # 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33 (IPv4-Embedded IPv6 Address)
-    r'((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}'
-    r'(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])'
-    r')', re.IGNORECASE)
+validate_ipv4_address = IPValidator(ipaddress.IPv4Address)
+validate_ipv6_address = IPValidator(ipaddress.IPv6Address)
+validate_ipv6v4_address = IPv6v4Validator()
 
-validate_ipv6_ipv4_address = RegexValidator(ipv64_re,
-                                            'Enter a valid IPv4, IPv6, '
-                                            '(IPv4-mapped, IPv4 Translated or IPv4-Embedded) IPv6 address',
-                                            'invalid')
-
-
-validate_url = URLValidator()
 
 re_uuid = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
 validate_uuid = RegexValidator(re_uuid, 'Enter a valid UUID.', 'invalid')
