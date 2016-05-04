@@ -135,7 +135,7 @@ class Vertex(Element):
         return self
 
     @classmethod
-    def find_by_value(cls, field, value, as_dict=False):
+    def find_by_value(cls, field, value, as_dict=False, **kwargs):
         """
         Returns vertices that match the given field/value pair.
         ####REVIEW####
@@ -157,7 +157,8 @@ class Vertex(Element):
             value_type=value_type,
             vlabel=_label,
             field=_field,
-            val=value
+            val=value,
+            **kwargs
         )
 
         if as_dict:  # pragma: no cover

@@ -150,9 +150,9 @@ class V(object):
         steps = self._get()
         script = "g.V(vid){}".format(steps)
         if steps:
-            future_results = self._get_stream(script, deserialize)
+            future_results = self._get_stream(script, deserialize, **kwargs)
         else:
-            future_results = self._get_simple(deserialize)
+            future_results = self._get_simple(deserialize, **kwargs)
 
         return future_results
 
