@@ -5,6 +5,7 @@ import datetime
 from calendar import timegm
 from decimal import Decimal as _D
 import re
+import struct
 import time
 import warnings
 from uuid import uuid1, uuid4
@@ -299,7 +300,7 @@ class IPV4(GraphProperty):
     """
     IPv4 Data property type
     """
-    serializer = str
+    serializer = int
     deserializer = ipaddress.IPv4Address
     validator = validate_ipv4_address
 
@@ -323,33 +324,32 @@ class IPV4(GraphProperty):
         return value
 
 
-class IPV6(IPV4):
+class IPV6(GraphProperty):
     """
     IPv6 Data property type
     """
 
-    deserializer = ipaddress.IPv4Address
     validator = validate_ipv6_address
 
     def __init__(self, *args, **kwargs):
         super(IPV6, self).__init__(*args, **kwargs)
 
+    def to_database(self, value):
+        if PY3:
+            value = int(value).to_bytes(16, 'big')
+        else:
+            value = to_bytes(int(value), 16)
+        hi, lo = struct.unpack('>QQ', value)
+        return [hi, lo]
+
+    def to_python(self, value):
+        if isinstance(value, list):
+            hi, lo = value
+            value = (hi << 64) + lo
+        return ipaddress.IPv6Address(value)
+
     def validate(self, value):
         return super(IPV6, self).validate(value)
-
-
-class IPV6WithV4(IPV6):
-    """
-    IPv6 with Mapped/Translated/Embedded IPv4 Data property type
-    """
-    deserializer = ipaddress.IPv4Address
-    validator = validate_ipv6v4_address
-
-    def __init__(self, *args, **kwargs):
-        super(IPV6WithV4, self).__init__(*args, **kwargs)
-
-    def validate(self, value):
-        return super(IPV6WithV4, self).validate(value)
 
 
 class Slug(GraphProperty):
@@ -374,3 +374,10 @@ class Slug(GraphProperty):
         value = super(Slug, self).validate(value)
 
         return value
+
+
+# from: http://stackoverflow.com/questions/16022556/has-python-3-2-to-bytes-back-ported-to-python-2-7
+def to_bytes(n, length, endianess='big'):
+    h = '%x' % n
+    s = ('0'*(len(h) % 2) + h).zfill(length*2).decode('hex')
+    return s if endianess == 'big' else s[::-1]

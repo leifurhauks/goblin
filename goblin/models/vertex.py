@@ -344,7 +344,8 @@ class Vertex(Element):
                                         label_strings,
                                         start,
                                         end,
-                                        allowed_elts)
+                                        allowed_elts,
+                                        **kwargs)
 
         def traversal_handler(data):
             if data is None:

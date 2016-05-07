@@ -25,3 +25,8 @@ AIOHTTP_CLIENT_MODULE = "aiohttp_client"
 # Schemes
 SECURE_SCHEMES = ["https", "wss"]
 INSECURE_SCHEMES = ["http", "ws"]
+
+# cardinality
+SINGLE = "SINGLE"
+SET = "SET"
+LIST = "LIST"

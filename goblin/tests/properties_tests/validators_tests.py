@@ -189,7 +189,7 @@ class IPV6ValidatorTestCase(ValidatorBaseClassTestCase):
 class IPV6With4ValidatorTestCase(ValidatorBaseClassTestCase):
     """ IPv4 mapped/translated/embedded IPv6 Validator """
 
-    klass = validate_ipv6v4_address
+    klass = validate_ipv6_address
     good_cases = ('1:2:3:4:5:6:7:8', '1::', '1:2:3:4:5:6:7::',  # IPv6
                   '1::8', '1:2:3:4:5:6::8', '1:2:3:4:5:6::8',
                   '1::7:8', '1:2:3:4:5::7:8', '1:2:3:4:5::8',

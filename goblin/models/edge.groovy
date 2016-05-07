@@ -9,6 +9,7 @@ def _save_edge(eid, outV, inV, elabel, attrs, exclusive) {
 	 * :param attrs: map of parameters to set on the edge
 	 * :param exclusive: if true, this will check for an existing edge of the same label and modify it, instead of creating another edge
 	 */
+	graph.tx().rollback()
 	try{
 	  if (eid == null) {
 			source = g.V(outV).next()
@@ -46,6 +47,7 @@ def _delete_edge(eid) {
      *
      * :param id: edge id
      */
+		 graph.tx().rollback()
      try {
         def e = g.E(eid).next()
 				if (e != null) {
@@ -60,6 +62,7 @@ def _delete_edge(eid) {
 }
 
 def _get_edges_between(out_v, in_v, elabel, page_num, per_page) {
+    graph.tx().rollback()
     try {
 			def source = g.V(out_v).next()
 			def target = g.V(in_v).next()
@@ -78,6 +81,7 @@ def _get_edges_between(out_v, in_v, elabel, page_num, per_page) {
 }
 
 def _find_edge_by_value(value_type, elabel, field, val) {
+    graph.tx().rollback()
     try {
        if (value_type) {
            return g.E().hasLabel(elabel).filter{it.get().value(field) == val}

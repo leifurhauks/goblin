@@ -6,6 +6,7 @@ def _save_vertex(vid, vlabel, attrs) {
      * :param id: vertex id, if null, a new vertex is created
      * :param attrs: map of parameters to set on the vertex
      */
+    graph.tx().rollback()
     try {
         def v = vid == null ? graph.addVertex(label, vlabel) : g.V(vid).next()
 
@@ -13,7 +14,13 @@ def _save_vertex(vid, vlabel, attrs) {
             if (item.value == null) {
                 v.property(item.key).remove()
             } else {
-                v.property(item.key, item.value)
+                if (item.value instanceof List){
+                  for (extra in item.value) {
+                    v.property(item.key, extra)
+                  }
+                } else {
+                  v.property(item.key, item.value)
+                }
             }
         }
         graph.tx().commit()
@@ -30,6 +37,7 @@ def _delete_vertex(vid) {
      *
      * :param id: vertex id
      */
+     graph.tx().rollback()
      try {
         def v = g.V(vid).next()
         v.remove()
@@ -50,6 +58,7 @@ def _create_relationship(id, in_direction, edge_label, edge_attrs, vertex_attrs)
      * :param edge_attrs: map of parameters to set on the edge
      * :param vertex_attrs: map of parameters to set on the vertex
      */
+    graph.tx().rollback()
     try {
         def v1 = g.V(id).next()
         def v2 = graph.addVertex()
@@ -84,6 +93,7 @@ def _traversal(vid, operation, labels, start, end, element_types) {
      * :param per_page: number of objects to return per page
      * :param element_types: list of allowed element types for results
      */
+    graph.tx().rollback()
     def results = g.V(vid)
     def label_args = labels == null ? [] : labels
     switch (operation) {
@@ -118,6 +128,7 @@ def _traversal(vid, operation, labels, start, end, element_types) {
 }
 
 def _delete_related(vid, operation, lbs) {
+    graph.tx().rollback()
     try{
         /**
          * deletes connected vertices / edges
@@ -152,6 +163,7 @@ def _find_vertex_by_value(value_type, vlabel, field, val) {
     /**
      * I'm not sure about the need for value_type
      */
+    graph.tx().rollback()
     try {
        if (value_type) {
            return g.V().hasLabel(vlabel).filter{it.get().value(field) == val}

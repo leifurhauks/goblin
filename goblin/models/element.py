@@ -690,8 +690,14 @@ class Element(BaseElement):
         if dtype == 'vertex':
             # properties are more complex now, this is a temporary hack for
             # the prototype
-            properties = {k: v[0]["value"] for (k, v) in properties.items()}
-            data["properties"] = properties
+            parsed_props = {}
+            for key, val in properties.items():
+                if len(val) > 1:
+                    val = [v["value"] for v in val]
+                else:
+                    val = val[0]["value"]
+                parsed_props[key] = val
+            data["properties"] = parsed_props
             if label not in vertex_types:
                 raise ElementDefinitionException(
                     'Vertex "%s" not defined' % label)

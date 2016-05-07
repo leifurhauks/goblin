@@ -273,21 +273,6 @@ validate_slug = RegexValidator(
     "Enter a valid 'slug' - letters, numbers, underscores or hyphens.",
     'invalid')
 
-# # IPv6/4
-# ipv64_re = re.compile(
-#     ipv6_re.pattern[:-1] + r'|' +
-#     r'::(ffff(:0{1,4}){0,1}:){0,1}'  # ::255.255.255.255   ::ffff:255.255.255.255  ::ffff:0:255.255.255.255
-#     r'((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}'  # ... (IPv4-mapped IPv6 addresses and IPv4-translated addresses)
-#     r'(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|'
-#     r'([0-9a-fA-F]{1,4}:){1,4}:'  # 2001:db8:3:4::192.0.2.33  64:ff9b::192.0.2.33 (IPv4-Embedded IPv6 Address)
-#     r'((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]).){3,3}'
-#     r'(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])'
-#     r')', re.IGNORECASE)
-#
-# validate_ipv6_ipv4_address = RegexValidator(ipv64_re,
-#                                             'Enter a valid IPv4, IPv6, '
-#                                             '(IPv4-mapped, IPv4 Translated or IPv4-Embedded) IPv6 address',
-#                                             'invalid')
 
 class IPValidator(BaseValidator):
 
@@ -304,27 +289,9 @@ class IPValidator(BaseValidator):
         else:
             return value
 
-class IPv6v4Validator(BaseValidator):
-
-    code = 'invalid'
-
-    def __call__(self, value):
-        try:
-            value = ipaddress.IPv6Address(value)
-        except Exception as exc:
-            raise ValidationError(
-                'Raised {}: {}'.format(exc.__class__, exc.args[0]),
-                code=self.code)
-        else:
-            # if value.ipv4_mapped is None:
-            #     raise ValidationError('Does not appear to be IPv4 mapped',
-            #         code=self.code)
-            return value
-
 
 validate_ipv4_address = IPValidator(ipaddress.IPv4Address)
 validate_ipv6_address = IPValidator(ipaddress.IPv6Address)
-validate_ipv6v4_address = IPv6v4Validator()
 
 
 re_uuid = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')

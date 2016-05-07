@@ -17,8 +17,7 @@ def make_property_key(name, data_type, cardinality, graph_name=None, **kwargs):
     script = """
         try {
             mgmt = graph.openManagement()
-            name = mgmt.makePropertyKey('%s').dataType(%s.class)
-            name.cardinality(Cardinality.%s).make()
+            name = mgmt.makePropertyKey('%s').dataType(%s.class).cardinality(Cardinality.%s).make()
             mgmt.commit()
         } catch (err) {
             graph.tx().rollback()
