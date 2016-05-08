@@ -353,7 +353,7 @@ class Slug(GraphProperty):
     """
     Slug Data property type
     """
-    data_type = "String"
+
     validator = validate_slug
 
     def __init__(self, *args, **kwargs):
