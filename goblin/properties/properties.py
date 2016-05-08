@@ -5,7 +5,6 @@ import datetime
 from calendar import timegm
 from decimal import Decimal as _D
 import re
-import struct
 import time
 import warnings
 from uuid import uuid1, uuid4
@@ -335,11 +334,9 @@ class IPV6(GraphProperty):
         super(IPV6, self).__init__(*args, **kwargs)
 
     def to_database(self, value):
-        if PY3:
-            value = int(value).to_bytes(16, 'big')
-        else:
-            value = to_bytes(int(value), 16)
-        hi, lo = struct.unpack('>QQ', value)
+        value = int(value)
+        hi = value >> 64
+        lo = value - (hi << 64)
         return [hi, lo]
 
     def to_python(self, value):
@@ -374,10 +371,3 @@ class Slug(GraphProperty):
         value = super(Slug, self).validate(value)
 
         return value
-
-
-# from: http://stackoverflow.com/questions/16022556/has-python-3-2-to-bytes-back-ported-to-python-2-7
-def to_bytes(n, length, endianess='big'):
-    h = '%x' % n
-    s = ('0'*(len(h) % 2) + h).zfill(length*2).decode('hex')
-    return s if endianess == 'big' else s[::-1]
