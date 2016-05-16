@@ -258,6 +258,22 @@ A good `pull` request should:
   commits into one)
 * Make sure all tests pass
 
+# Using vagrant environment
+
+You can use [vagrant](https://www.vagrantup.com/) to start a development environment with cassandra, elasticsearch and titan. It uses docker for running the necessary services.
+
+Start the environment with:
+
+```
+$ vagrant up
+```
+
+Run the integrated tests with:
+
+```
+$ vagrant ssh -c 'cd /vagrant; ./run_tests.sh'
+```
+
 # Integration with Python Asynchronous Frameworks
 
 `goblin` is designed to interact smoothly with a variety of async frameworks such as [aiohttp](http://aiohttp.readthedocs.org/en/stable/), [Tornado](http://www.tornadoweb.org/en/stable/), and [Pulsar](http://pythonhosted.org/pulsar/). The following examples demonstrate some simple integration with Pulsar using the `gremlinclinet.aiohttp` module.
