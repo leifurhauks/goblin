@@ -147,7 +147,7 @@ class DateTimeNaive(GraphProperty):
                     "'{}' is not a datetime object".format(value))
 
         tmp = time.mktime(value.timetuple())
-        tmp = tmp * 1000.0
+        tmp = int(tmp) * 1000
         return tmp
 
 
@@ -197,7 +197,7 @@ class DateTime(GraphProperty):
                     "'{}' is not a datetime object".format(value))
 
         tmp = timegm(value.utctimetuple())
-        tmp = tmp * 1000.0
+        tmp = tmp * 1000
         return tmp
 
 

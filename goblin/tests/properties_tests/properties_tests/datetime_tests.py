@@ -30,7 +30,7 @@ class DateTimePropertyTestCase(GraphPropertyBaseClassTestCase):
     def test_to_database_method(self):
         d = self.klass(strict=False)
         self.assertIsNone(d.to_database(None))
-        self.assertIsInstance(d.to_database(100000), float)
+        self.assertIsInstance(d.to_database(100000), int)
         with self.assertRaises(ValidationError):
             d.to_database(lambda x: x)
 
@@ -93,6 +93,8 @@ class TestVertexChoicesTestCase(BaseGoblinTestCase):
     @gen_test
     def test_good_choices_key_io(self):
         print_("creating vertex")
+        key = DateTimeTestChoicesVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Date')
         dt = yield DateTimeTestChoicesVertex.create(
             test_val=datetime.datetime(2014, 1, 1, tzinfo=utc))
         print_("validating input")
@@ -106,6 +108,8 @@ class TestVertexChoicesTestCase(BaseGoblinTestCase):
     def test_good_choices_value_io(self):
         # Known to be a bug, all keys and choices must be int | long | datetime
         print_("creating vertex")
+        key = DateTimeTestChoicesVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Date')
         dt = yield DateTimeTestChoicesVertex.create(test_val='B')
         print_("validating input")
         self.assertEqual(
@@ -115,6 +119,9 @@ class TestVertexChoicesTestCase(BaseGoblinTestCase):
 
     @gen_test
     def test_bad_choices_io(self):
+        key = DateTimeTestChoicesVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Date')
+
         with self.assertRaises(ValidationError):
             print_("creating vertex")
             dt = yield DateTimeTestChoicesVertex.create(
