@@ -7,7 +7,7 @@ from tornado.testing import gen_test
 
 from goblin.tests import BaseGoblinTestCase
 from goblin._compat import PY2
-from .base_tests import GraphPropertyBaseClassTestCase
+from .base_tests import GraphPropertyBaseClassTestCase, create_key
 from goblin.properties.properties import DateTime, GraphProperty
 from goblin.properties.validators import DateTimeUTCValidator
 from goblin.models import Vertex
@@ -65,6 +65,8 @@ class DateTimeVertexTestCase(GraphPropertyBaseClassTestCase):
     @gen_test
     def test_datetime_io(self):
         print_("creating vertex")
+        key = DateTimeTestChoicesVertex.get_property_by_name('test_val')
+        yield create_key(key, 'Date')
         dt = yield DateTimeTestVertex.create(
             test_val=datetime.datetime(2014, 1, 1, tzinfo=utc))
         print_("getting vertex from vertex: %s" % dt)

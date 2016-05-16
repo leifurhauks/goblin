@@ -129,9 +129,10 @@ class DateTimeNaive(GraphProperty):
         super(DateTimeNaive, self).__init__(**kwargs)
 
     def to_python(self, value):
-        if isinstance(value, datetime.datetime):
-            return value
-        return datetime.datetime.fromtimestamp(float(value))
+        if value is not None:
+            if isinstance(value, datetime.datetime):
+                return value
+            return datetime.datetime.fromtimestamp(value / 1000)
 
     def to_database(self, value):
         value = super(DateTimeNaive, self).to_database(value)
@@ -145,10 +146,8 @@ class DateTimeNaive(GraphProperty):
                 raise ValidationError(
                     "'{}' is not a datetime object".format(value))
 
-        tmp = time.mktime(value.timetuple())  # gives us a float with .0
-        # microtime is a 6 digit int, so we bring it down to .xxx and add it to
-        # the float TS
-        tmp += float(value.microsecond) / 1000000.0
+        tmp = time.mktime(value.timetuple())
+        tmp = tmp * 1000.0
         return tmp
 
 
@@ -171,6 +170,8 @@ class DateTime(GraphProperty):
         super(DateTime, self).__init__(**kwargs)
 
     def to_python(self, value):
+        if value is None:
+            return
         try:
             if isinstance(value, datetime.datetime):
                 if value.tzinfo == utc:
@@ -180,8 +181,8 @@ class DateTime(GraphProperty):
         except:  # pragma: no cover
             # this shouldn't happen unless the validator has changed
             pass
-        return datetime.datetime.utcfromtimestamp(
-            float(value)).replace(tzinfo=utc)
+        value = value / 1000
+        return datetime.datetime.utcfromtimestamp(value).replace(tzinfo=utc)
 
     def to_database(self, value):
         value = super(DateTime, self).to_database(value)
@@ -196,10 +197,7 @@ class DateTime(GraphProperty):
                     "'{}' is not a datetime object".format(value))
 
         tmp = timegm(value.utctimetuple())
-        # gives us an integer of epoch seconds without microseconds
-        # microtime is a 6 digit int, so we bring it down to .xxx and add it
-        # to the float TS
-        tmp += float(value.microsecond) / 1000000.0
+        tmp = tmp * 1000.0
         return tmp
 
 
@@ -309,11 +307,6 @@ class IPV4(GraphProperty):
             if not PY3:
                 kwargs['default'] = kwargs['default'].encode(self.encoding)
         super(IPV4, self).__init__(*args, **kwargs)
-
-    def to_python(self, value):
-        if value:
-            value = ipaddress.ip_address(value)
-        return value
 
     def validate(self, value):
         # Make sure it gets encoded correctly
