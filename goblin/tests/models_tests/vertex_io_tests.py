@@ -247,31 +247,6 @@ class TestVertexIO(BaseGoblinTestCase):
             yield v2.delete()
             yield v1.delete()
 
-    @gen_test
-    @attr('vertex_delete_methods')
-    def test_delete_methods(self):
-        v1 = yield TestVertexModel.create()
-        v2 = yield TestVertexModel.create()
-
-        # delete_outE
-        e1 = yield TestEdgeModel.create(v1, v2)
-        yield v1.delete_outE(TestEdgeModel)
-
-        # delete_inE
-        e1 = yield TestEdgeModel.create(v1, v2)
-        yield v2.delete_inE(TestEdgeModel)
-
-        # delete_inV
-        e1 = yield TestEdgeModel.create(v1, v2)
-        yield v1.delete_inV(TestEdgeModel)
-
-        # delete_outV
-        v2 = yield TestVertexModel.create()
-        e1 = yield TestEdgeModel.create(v1, v2)
-        yield v2.delete_outV(TestEdgeModel)
-
-        yield v2.delete()
-
 
 class DeserializationTestModel(Vertex):
     count = properties.Integer()

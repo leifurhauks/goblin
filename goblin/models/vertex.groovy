@@ -1,5 +1,5 @@
 
-def _save_vertex(vid, vlabel, attrs) {
+def _save_vertex(vid, vlabel, attrs, geo_attrs) {
     /**
      * Saves a vertex
      *
@@ -9,6 +9,18 @@ def _save_vertex(vid, vlabel, attrs) {
     graph.tx().rollback()
     try {
         def v = vid == null ? graph.addVertex(label, vlabel) : g.V(vid).next()
+
+        for (item in geo_attrs.entrySet()) {
+            if (item.value == null) {
+                v.property(item.key).remove()
+            } else if (item.value[0] == 'point') {
+                v.property(item.key, Geoshape.point(*item.value[1]))
+            } else if (item.value[0] == 'circle') {
+                v.property(item.key, Geoshape.circle(*item.value[1]))
+            } else if (item.value[0] == 'box') {
+                v.property(item.key, Geoshape.box(*item.value[1]))
+            }
+        }
 
         for (item in attrs.entrySet()) {
             if (item.value == null) {

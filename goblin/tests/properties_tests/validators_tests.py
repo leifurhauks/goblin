@@ -6,6 +6,7 @@ from nose.plugins.attrib import attr
 from decimal import Decimal as _D
 import datetime
 from pytz import utc
+import geojson
 
 
 @attr('unit', 'validators')
@@ -209,6 +210,14 @@ class UUIDValidatorTestCase(ValidatorBaseClassTestCase):
     klass = validate_uuid
     good_cases = ('bb19eaed-c946-4cef-8001-7cc3357cc439', )
     if PY2:
-        bad_cases = ('val', [], (), {}, None, 0, long(1), False, 1.1)
+        bad_cases = ('val', [], (), {}, 0, long(1), False, 1.1)
     else:
         bad_cases = ('val', [], (), {}, None, 0, False, 1.1)
+
+
+@attr('unit', 'validators')
+class PointValidatorTestCase(ValidatorBaseClassTestCase):
+    klass = validate_point
+    good_cases = (geojson.Point((-115.81, 37.24)), (11.81, -37.24),
+                  '{"type": "Point", "coordinates": [-115.81, 37.24]}')
+    bad_cases = (11, ("11.81", "-37.24"))

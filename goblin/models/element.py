@@ -14,6 +14,7 @@ from goblin.exceptions import (
     ElementDefinitionException, GoblinQueryError)
 from goblin.gremlin import BaseGremlinMethod
 from goblin.properties.base import BaseValueManager
+from goblin.properties.properties import Point, Circle, Box
 
 
 logger = logging.getLogger(__name__)
@@ -176,6 +177,7 @@ class BaseElement(object):
 
         """
         values = {}
+        geo_values = {}
         was_saved = self._id is not None
         for name, prop in self._properties.items():
             # Determine the save strategy for this column
@@ -190,7 +192,18 @@ class BaseElement(object):
 
             if should_save:
                 # print_("Saving %s to database for name %s" % (prop.db_field_name or name, name))
-                values[prop.db_field_name or name] = prop.to_database(vm.value)
+                if isinstance(prop, Point):
+                    geo_values[prop.db_field_name or name] = ('point',
+                        prop.to_database(vm.value))
+                elif isinstance(prop, Circle):
+                    geo_values[prop.db_field_name or name] = ('circle',
+                        prop.to_database(vm.value))
+                elif isinstance(prop, Box):
+                    geo_values[prop.db_field_name or name] = ('box',
+                        prop.to_database(vm.value))
+                else:
+                    values[prop.db_field_name or name] = prop.to_database(
+                        vm.value)
 
         # manual values
         for name, prop in self._manual_values.items():
@@ -207,7 +220,7 @@ class BaseElement(object):
                                            graph_property=None):
                     values[name] = prop.value
 
-        return values
+        return values, geo_values
 
     @classmethod
     def translate_db_fields(cls, data):

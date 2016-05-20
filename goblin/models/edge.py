@@ -1,5 +1,6 @@
 import logging
 
+
 from goblin import connection
 from goblin.constants import EDGE_TRAVERSAL
 from goblin._compat import (
@@ -206,10 +207,12 @@ class Edge(Element):
         """
         super(Edge, self).save()
         future = connection.get_future(kwargs)
+        attrs, geo_attrs = self.as_save_params()
         future_result = self._save_edge(self._outV,
                                         self._inV,
                                         self.get_label(),
-                                        self.as_save_params(),
+                                        attrs,
+                                        geo_attrs,
                                         exclusive=self.__exclusive__,
                                         **kwargs)
 

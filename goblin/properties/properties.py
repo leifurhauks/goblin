@@ -14,6 +14,7 @@ from goblin._compat import (
     text_type, string_types, float_types, integer_types, long_, PY3)
 
 from goblin.properties.base import GraphProperty
+from goblin.properties import geoshapes
 from goblin.properties.validators import *
 
 
@@ -310,9 +311,11 @@ class IPV4(GraphProperty):
 
     def validate(self, value):
         # Make sure it gets encoded correctly
-        if isinstance(value, text_type) and not PY3:
-            value = value.encode(self.encoding)
         value = super(IPV4, self).validate(value)
+        if value:
+            if isinstance(value, text_type) and not PY3:
+                value = value.encode(self.encoding)
+            value = super(IPV4, self).validate(value)
         return value
 
 
@@ -336,10 +339,67 @@ class IPV6(GraphProperty):
         if isinstance(value, list):
             hi, lo = value
             value = (hi << 64) + lo
-        return ipaddress.IPv6Address(value)
+            value = ipaddress.IPv6Address(value)
+        return value
 
     def validate(self, value):
         return super(IPV6, self).validate(value)
+
+
+class Point(GraphProperty):
+
+    validator = validate_point
+
+    def to_python(self, value):
+        if isinstance(value, dict):
+            value = geojson.Point(value['coordinates'])
+        return value
+
+    def to_database(self, value):
+        if value:
+            try:
+                coords = list(geojson.utils.coords(value))[0]
+            except:
+                raise ValidationError(
+                    "'{}' is not a datetime object".format(value))
+            return (coords[1], coords[0])
+
+
+class Circle(GraphProperty):
+
+    validator = validate_circle
+
+    def to_python(self, value):
+        if isinstance(value, dict):
+            coords = value['coordinates']
+            value = geoshapes.Circle((coords[0], coords[1], value['radius']))
+        return value
+
+    def to_database(self, value):
+        if value:
+            coords = list(geojson.utils.coords(value))[0]
+            lat = coords[1]
+            lng = coords[0]
+            radius = coords[2]
+            return (lat, lng, radius)
+
+
+class Box(GraphProperty):
+
+    validator = validate_box
+
+    def to_python(self, value):
+        if isinstance(value, dict):
+            coords = value['coordinates']
+            value = geojson.Polygon(coords)
+        return value
+
+    def to_database(self, value):
+        if value:
+            coords = list(geojson.utils.coords(value))
+            lngs = [c[0] for c in coords]
+            lats = [c[1] for c in coords]
+            return (min(lats), min(lngs), max(lats), max(lngs))
 
 
 class Slug(GraphProperty):

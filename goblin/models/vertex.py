@@ -125,9 +125,10 @@ class Vertex(Element):
 
     def __getstate__(self):
         state = {'id': self.id, '_type': 'vertex'}
-        properties = self.as_save_params()
+        properties, geo_properties = self.as_save_params()
         properties['label'] = self.get_label()
         state['properties'] = properties
+        state['geo_properties'] = geo_properties
         return state
 
     def __setstate__(self, state):
@@ -218,12 +219,12 @@ class Vertex(Element):
         save strategy is to re-save all fields every time the object is saved.
         """
         super(Vertex, self).save()
-        params = self.as_save_params()
+        params, geo_params = self.as_save_params()
         label = self.get_label()
         # params['element_type'] = self.get_element_type()  don't think we need
         # Here this is a future, have to set handler in callback
         future = connection.get_future(kwargs)
-        future_result = self._save_vertex(label, params, **kwargs)
+        future_result = self._save_vertex(label, params, geo_params, **kwargs)
         deserialize = kwargs.pop('deserialize', True)
         def on_read(f2):
             try:
@@ -510,26 +511,3 @@ class Vertex(Element):
 
         """
         return self._simple_traversal('bothV', labels, **kwargs)
-
-    def delete_outE(self, *labels, **kwargs):
-        """Delete all outgoing edges with the given label."""
-        return self._simple_deletion('outE', labels, **kwargs)
-
-    def delete_inE(self, *labels, **kwargs):
-        """Delete all incoming edges with the given label."""
-        return self._simple_deletion('inE', labels, **kwargs)
-
-    def delete_outV(self, *labels, **kwargs):
-        """
-        Delete all outgoing vertices connected with edges with the given
-        label.
-        """
-        return self._simple_deletion('outV', labels, **kwargs)
-
-    def delete_inV(self, *labels, **kwargs):
-        """Delete all incoming vertices connected with edges with the given label."""
-        return self._simple_deletion('inV', labels, **kwargs)
-
-    def query(self):
-        from goblin.models.query import V
-        return V(self)

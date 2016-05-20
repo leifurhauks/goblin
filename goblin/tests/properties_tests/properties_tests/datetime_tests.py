@@ -9,7 +9,7 @@ from goblin.tests import BaseGoblinTestCase
 from goblin._compat import PY2
 from .base_tests import GraphPropertyBaseClassTestCase, create_key
 from goblin.properties.properties import DateTime, GraphProperty
-from goblin.properties.validators import DateTimeUTCValidator
+
 from goblin.models import Vertex
 from goblin.exceptions import ValidationError
 from goblin._compat import print_

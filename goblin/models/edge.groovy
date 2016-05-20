@@ -1,5 +1,5 @@
 
-def _save_edge(eid, outV, inV, elabel, attrs, exclusive) {
+def _save_edge(eid, outV, inV, elabel, attrs, geo_attrs, exclusive) {
 	/**
 	 * Saves an edge between two vertices
 	 * MAY NEED TO REWRITE THIS FUNCTION
@@ -24,6 +24,17 @@ def _save_edge(eid, outV, inV, elabel, attrs, exclusive) {
 			}
 		} else {
 			e = g.E(eid).next()
+		}
+		for (item in geo_attrs.entrySet()) {
+				if (item.value == null) {
+						e.property(item.key).remove()
+				} else if (item.value[0] == 'point') {
+						e.property(item.key, Geoshape.point(*item.value[1]))
+				} else if (item.value[0] == 'circle') {
+						e.property(item.key, Geoshape.circle(*item.value[1]))
+				} else if (item.value[0] == 'box') {
+						e.property(item.key, Geoshape.box(*item.value[1]))
+				}
 		}
 		for (item in attrs.entrySet()) {
       if (item.value == null) {

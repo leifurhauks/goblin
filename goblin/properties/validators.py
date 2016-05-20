@@ -14,9 +14,12 @@ except ImportError:     # Python 2
 from pytz import utc
 import ipaddress
 
+import geojson
+
 from goblin._compat import (string_types, text_type, float_types,
                             integer_types, array_types, bool_types, print_)
 from goblin.exceptions import GoblinException, ValidationError
+from goblin.properties import geoshapes
 
 
 # These values, if given to validate(), will trigger the self.required check.
@@ -292,6 +295,73 @@ class IPValidator(BaseValidator):
 
 validate_ipv4_address = IPValidator(ipaddress.IPv4Address)
 validate_ipv6_address = IPValidator(ipaddress.IPv6Address)
+
+
+class PointValidator(BaseValidator):
+
+    def __init__(self):
+        super(PointValidator, self).__init__()
+        self.geotype = geojson.Point
+
+    def __call__(self, value):
+        if isinstance(value, string_types):
+            try:
+                value = geojson.loads(value)
+            except Exception as exc:
+                raise ValidationError(
+                    'Raised {}: {}'.format(exc.__class__, exc.args[0]),
+                    code=self.code)
+            if not isinstance(value, self.geotype):
+                raise ValidationError(
+                    'Raised {}: {}'.format(exc.__class__, exc.args[0]),
+                    code=self.code)
+        elif not isinstance(value, self.geotype):
+            try:
+                value = self.geotype(value)
+            except Exception as exc:
+                raise ValidationError(
+                    'Raised {}: {}'.format(exc.__class__, exc.args[0]),
+                    code=self.code)
+        return value
+
+
+validate_point = PointValidator()
+
+
+class CircleValidator(PointValidator):
+
+    def __init__(self):
+        super(CircleValidator, self).__init__()
+        self.geotype = geoshapes.Circle
+
+
+validate_circle = CircleValidator()
+
+
+class BoxValidator(PointValidator):
+
+    def __init__(self):
+        super(BoxValidator, self).__init__()
+        self.geotype = geojson.Polygon
+
+    def __call__(self, value):
+        value = super(BoxValidator, self).__call__(value)
+        coords = list(geojson.utils.coords(value))
+        lngs = {c[0] for c in coords}
+        lats = {c[1] for c in coords}
+        if not len(lngs) == 2 and not len(lats) == 2:
+            raise ValidationError("Coordinates do not form box",code=self.code)
+        for lng in lngs:
+            for lat in lats:
+                if (lng, lat) not in coords:
+                    raise ValidationError("Coordinates do not form box",
+                                          code=self.code)
+        return value
+
+
+
+
+validate_box = BoxValidator()
 
 
 re_uuid = re.compile(r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}')
