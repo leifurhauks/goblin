@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 # Global vars
-_future = None
 _connection_pool = None
 _graph_name = None
 _traversal_source = None
@@ -51,7 +50,7 @@ def execute_query(query, bindings=None, pool=None, future_class=None,
         pool = _connection_pool
 
     if future_class is None:
-        future_class = _future
+        future_class = pool._future_class  # maybe add a read-only "future_class" property to gremlinclient.Pool
 
     if not pool and not future_class:
         raise GoblinConnectionError(("Please call connection.setup or pass "
@@ -125,7 +124,6 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
         connection. Overides ssl_context param.
     :param loop: io loop.
     """
-    global _future
     global _connection_pool
     global _graph_name
     global _traversal_source
@@ -158,9 +156,6 @@ def setup(url, pool_class=None, graph_name='graph', traversal_source='g',
                                   force_release=True,
                                   future_class=future_class,
                                   loop=loop)
-
-    future_class = _connection_pool.graph.future_class
-    _future = future_class
 
     # Model/schema sync will run here as well as indexing
 
@@ -217,10 +212,12 @@ def sync_spec():  # pragma: no cover
 def get_future(kwargs):
     future_class = kwargs.get('future_class', None)
     if future_class is None:
-        future_class = _future
-    if future_class is None:
-        raise GoblinConnectionError(("Please call connection.setup or "
-                                     "pass future_class explicitly"))
+        pool = kwargs.get('pool', _connection_pool)
+        if pool is not None:
+            future_class = pool._future_class
+        else:
+            raise GoblinConnectionError(("Please call connection.setup or "
+                                         "pass pool explicitly"))
     return future_class()
 
 
