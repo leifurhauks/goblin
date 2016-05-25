@@ -50,7 +50,7 @@ def execute_query(query, bindings=None, pool=None, future_class=None,
         pool = _connection_pool
 
     if future_class is None:
-        future_class = pool._future_class  # maybe add a read-only "future_class" property to gremlinclient.Pool
+        future_class = pool.future_class
 
     if not pool and not future_class:
         raise GoblinConnectionError(("Please call connection.setup or pass "
@@ -214,7 +214,7 @@ def get_future(kwargs):
     if future_class is None:
         pool = kwargs.get('pool', _connection_pool)
         if pool is not None:
-            future_class = pool._future_class
+            future_class = pool.future_class
         else:
             raise GoblinConnectionError(("Please call connection.setup or "
                                          "pass pool explicitly"))
