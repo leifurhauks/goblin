@@ -100,7 +100,12 @@ which allows you to retrieve an element by id, and
 corresponding to the model class from the database::
 
     >>> joe = yield from User.get(joe.id)
-    >>> users = yield from User.all()
+    >>> stream = yield from User.all()
+    >>> while True:
+    ...     resp = yield from stream.read()
+    ...     if resp is None:
+    ...         break
+    ...     print(resp)
 
 Instances of graph elements (Vertices and Edges) provide methods that
 allow you to delete and update properties.
