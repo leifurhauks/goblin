@@ -7,7 +7,7 @@ docutils==0.12
 factory-boy==2.6.0
 fake-factory==0.5.3
 geojson==1.3.2
-gremlinclient==0.2.6
+gremlinclient==0.2.7
 inflection==0.3.1
 ipaddress==1.0.16
 Jinja2==2.8
