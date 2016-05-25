@@ -126,11 +126,9 @@ class Relationship(object):
             start = end = None
 
         operation = self.direction.lower() + 'V'
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
 
-        future = future_class()
+        future = connection.get_future(kwargs)
+
         future_result = getattr(
             self.top_level_vertex, operation)(*allowed_elts)
 
@@ -174,11 +172,8 @@ class Relationship(object):
             start = end = None
 
         operation = self.direction.lower() + 'E'
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
 
-        future = future_class()
+        future = connection.get_future(kwargs)
         future_result = getattr(
             self.top_level_vertex, operation)(*allowed_elts)
 
@@ -307,11 +302,7 @@ class Relationship(object):
                 "That is not a valid relationship setup: %s <-%s-> %s" % (
                     edge_type, self.direction, vertex_type))
 
-        future_class = kwargs.get('future_class', None)
-        if future_class is None:
-            future_class = connection._future
-
-        future = future_class()
+        future = connection.get_future(kwargs)
         if isinstance(vertex_type, string_types):
 
             top_level_module = self.top_level_vertex.__module__
