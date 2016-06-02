@@ -202,6 +202,18 @@ class DateTime(GraphProperty):
         return tmp
 
 
+class Date(DateTime):
+    """For convenience, a wrapper around the DateTime property type."""
+    def to_python(self, value):
+        python_value = super(Date, self).to_python(value)
+        return python_value.date()
+
+    def to_database(self, value):
+        if isinstance(value, datetime.date):
+            value = datetime.datetime(value.year, value.month, value.day, tzinfo=utc)
+        return super(Date, self).to_database(value)
+
+
 class UUID(GraphProperty):
     """Universally Unique Identifier (UUID) type"""
     serializer = str
